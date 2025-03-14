@@ -54,17 +54,27 @@ async function loadCustomers() {
 // שמירת לקוחות ב-Firestore
 async function saveCustomers() {
     try {
+        // קודם כל, מחק את כל הלקוחות הקיימים ב-Firestore
+        const snapshot = await db.collection(`customers_${currentUser}`).get();
         const batch = db.batch();
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+        console.log(`Cleared existing customers for ${currentUser}`);
+
+        // שמור את הלקוחות החדשים
+        const saveBatch = db.batch();
         for (const customer of customers) {
-            // אם אין מזהה, צור חדש
             if (!customer.id) {
                 customer.id = generateUniqueId();
             }
             const docRef = db.collection(`customers_${currentUser}`).doc(customer.id);
-            batch.set(docRef, customer);
+            saveBatch.set(docRef, customer);
         }
-        await batch.commit();
+        await saveBatch.commit();
         console.log(`Saved customers for ${currentUser}:`, customers);
+
         // טען מחדש את הלקוחות לאחר שמירה
         await loadCustomers();
     } catch (e) {
@@ -105,6 +115,8 @@ function updateDashboardStats() {
         totalSalesElement.textContent = `$${addCommasToNumber(totalSales)}`;
         totalProjectsElement.textContent = addCommasToNumber(totalProjects);
         totalCommissionElement.textContent = `$${addCommasToNumber(totalCommission)}`;
+    } else {
+        console.log('Dashboard elements not found');
     }
 }
 
@@ -130,6 +142,8 @@ function renderCustomers() {
             });
             container.appendChild(card);
         });
+    } else {
+        console.log('Customers container not found');
     }
 }
 
