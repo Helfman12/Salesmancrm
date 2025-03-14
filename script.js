@@ -1,13 +1,13 @@
 // הגדרות Firebase (החלף את הערכים מה-Config שלך ב-Firebase Console)
 const firebaseConfig = {
-    apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
+    apiKey: "AIzaSyBFfuD-wxjz6AXqjeHIsCV_2Z4reflu2ps",
     authDomain: "constructionsalesinterface.firebaseapp.com",
     projectId: "constructionsalesinterface",
-    storageBucket: "constructionsalesinterface.appspot.com",
-    messagingSenderId: "938357842695",
-    appId: "1:938357842695:web:03ac6e8646528896b78582",
+    storageBucket: "constructionsalesinterface.firebasestorage.app",
+    messagingSenderId: "938358742695",
+    appId: "1:938358742695:web:03ac6e8646528896b78582",
     measurementId: "G-4D1H3P382N"
-};
+  };
 
 // איניציאליזציה של Firebase
 try {
