@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Customer - Energy Efficient Sales</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="add-customer-container">
+        <header>
+            <h1>Add New Customer</h1>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="customers.html">Customers</a>
+                <a href="money-reports.html">Money Reports</a>
+                <a href="#" id="logoutBtn">Log Out</a>
+            </nav>
+        </header>
+        <main>
+            <form id="addCustomerForm">
+                <div class="input-group">
+                    <label for="customerName">Customer Name:</label>
+                    <input type="text" id="customerName" name="customerName" required>
+                </div>
+                <div class="input-group">
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" name="address" required>
+                </div>
+                <div class="input-group">
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" name="phone" placeholder="1234567890" required>
+                </div>
+                <div class="input-group">
+                    <label for="age">Age:</label>
+                    <input type="number" id="age" name="age" min="1" required>
+                </div>
+                <div class="input-group">
+                    <label for="contractDate">Contract Date:</label>
+                    <input type="date" id="contractDate" name="contractDate" required>
+                </div>
+                <div class="input-group">
+                    <label for="projectType">Project Type:</label>
+                    <select id="projectType" name="projectType" multiple required>
+                        <option value="Roofing">Roofing</option>
+                        <option value="Solar">Solar</option>
+                        <option value="Hvac">Hvac</option>
+                        <option value="Windows">Windows</option>
+                        <option value="Tankless Water Heater">Tankless Water Heater</option>
+                        <option value="Exterior Paint">Exterior Paint</option>
+                        <option value="Interior Paint">Interior Paint</option>
+                        <option value="Flooring">Flooring</option>
+                        <option value="Bathroom Remodel">Bathroom Remodel</option>
+                        <option value="Kitchen Remodel">Kitchen Remodel</option>
+                        <option value="Landscape">Landscape</option>
+                        <option value="Gutters">Gutters</option>
+                        <option value="Foundation">Foundation</option>
+                        <option value="Insulation">Insulation</option>
+                        <option value="Fence">Fence</option>
+                        <option value="Main Panel Upgrade">Main Panel Upgrade</option>
+                        <option value="Rewire">Rewire</option>
+                        <option value="Repipe">Repipe</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Selected Projects:</label>
+                    <div id="selectedProjects" class="selected-projects"></div>
+                </div>
+                <div class="input-group">
+                    <label for="projectPrice">Project Total Price ($):</label>
+                    <input type="number" id="projectPrice" name="projectPrice" min="0" step="0.01" required>
+                </div>
+                <div class="input-group">
+                    <label for="projectExpenses">Project Expenses ($):</label>
+                    <div class="expense-input-group">
+                        <input type="number" id="projectExpenses" name="projectExpenses" min="0" step="0.01" readonly required>
+                        <button type="button" id="addExpenseBtn" class="add-expense-btn"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="expenseList" class="expense-list"></div>
+                </div>
+                <div class="input-group">
+                    <label>Payment Method:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="paymentCash" name="paymentMethod" value="Cash" required>
+                        <label for="paymentCash" class="radio-btn">
+                            <i class="fas fa-money-bill-wave"></i> Cash
+                        </label>
+                        <input type="radio" id="paymentFinance" name="paymentMethod" value="Finance">
+                        <label for="paymentFinance" class="radio-btn">
+                            <i class="fas fa-credit-card"></i> Finance
+                        </label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="leadCost">Lead Cost (%):</label>
+                    <input type="number" id="leadCost" name="leadCost" min="0" max="100" step="0.1" required>
+                </div>
+                <div class="input-group">
+                    <label for="dealerFee">Dealer Fee (%):</label>
+                    <input type="number" id="dealerFee" name="dealerFee" min="0" max="100" step="0.1" required>
+                </div>
+                <div class="input-group">
+                    <label for="bank">Bank:</label>
+                    <select id="bank" name="bank" multiple required>
+                        <option value="Goodleap">Goodleap</option>
+                        <option value="Service Finance">Service Finance</option>
+                        <option value="Aqua">Aqua</option>
+                        <option value="Slice">Slice</option>
+                        <option value="Mosaic">Mosaic</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Selected Banks:</label>
+                    <div id="selectedBanks" class="selected-banks"></div>
+                </div>
+                <div class="input-group">
+                    <label for="terms">Terms:</label>
+                    <select id="terms" name="terms" required>
+                        <option value="">Select Terms</option>
+                        <option value="5 years 12.99%">5 years 12.99%</option>
+                        <option value="7 years 12.99%">7 years 12.99%</option>
+                        <option value="10 years 12.99%">10 years 12.99%</option>
+                        <option value="12 years 12.99%">12 years 12.99%</option>
+                        <option value="15 years 12.99%">15 years 12.99%</option>
+                        <option value="5 years 11.99%">5 years 11.99%</option>
+                        <option value="7 years 11.99%">7 years 11.99%</option>
+                        <option value="10 years 11.99%">10 years 11.99%</option>
+                        <option value="12 years 11.99%">12 years 11.99%</option>
+                        <option value="15 years 11.99%">15 years 11.99%</option>
+                        <option value="5 years 10.99%">5 years 10.99%</option>
+                        <option value="7 years 10.99%">7 years 10.99%</option>
+                        <option value="10 years 10.99%">10 years 10.99%</option>
+                        <option value="12 years 10.99%">12 years 10.99%</option>
+                        <option value="15 years 10.99%">15 years 10.99%</option>
+                        <option value="5 years 9.99%">5 years 9.99%</option>
+                        <option value="7 years 9.99%">7 years 9.99%</option>
+                        <option value="10 years 9.99%">10 years 9.99%</option>
+                        <option value="12 years 9.99%">12 years 9.99%</option>
+                        <option value="15 years 9.99%">15 years 9.99%</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="maxApproved">Max Approved ($):</label>
+                    <input type="number" id="maxApproved" name="maxApproved" min="0" step="0.01" required>
+                </div>
+                <div class="input-group">
+                    <label for="moneyUsed">Money Used ($):</label>
+                    <input type="number" id="moneyUsed" name="moneyUsed" min="0" step="0.01" readonly required>
+                </div>
+                <div class="input-group">
+                    <label for="status">Project Status:</label>
+                    <select id="status" name="status" required>
+                        <option value="In Progress">In Progress</option>
+                        <option value="In Progress(Funded)">In Progress (Funded)</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <button type="submit">Add Customer</button>
+            </form>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
