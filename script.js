@@ -1,4 +1,4 @@
-// הגדרות Firebase (החלף את הערכים מה-Config שלך ב-Firebase Console)
+// הגדרות Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBFfuD-wxjz6AXqjeHIsCV_2Z4reflu2ps",
     authDomain: "constructionsalesinterface.firebaseapp.com",
@@ -14,8 +14,8 @@ try {
     firebase.initializeApp(firebaseConfig);
     console.log('Firebase initialized successfully');
 } catch (error) {
-    console.error('Error initializing Firebase:', error);
-    alert('Error initializing Firebase. Please check the configuration.');
+    console.error('Detailed Firebase initialization error:', error);
+    alert('Error initializing Firebase: ' + error.message);
 }
 const db = firebase.firestore();
 
