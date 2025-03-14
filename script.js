@@ -1,15 +1,21 @@
 // הגדרות Firebase (החלף את הערכים מה-Config שלך ב-Firebase Console)
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBFfuD-wxjz6AXqjeHIsCV_2Z4reflu2ps",
+    authDomain: "constructionsalesinterface.firebaseapp.com",
+    projectId: "constructionsalesinterface",
+    storageBucket: "constructionsalesinterface.firebasestorage.app",
+    messagingSenderId: "938358742695",
+    appId: "1:938358742695:web:03ac6e8646528896b78582"
 };
 
 // איניציאליזציה של Firebase
-firebase.initializeApp(firebaseConfig);
+try {
+    firebase.initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+} catch (error) {
+    console.error('Error initializing Firebase:', error);
+    alert('Error initializing Firebase. Please check the configuration.');
+}
 const db = firebase.firestore();
 
 // בדיקת התחברות בעת טעינת הדפים
@@ -22,7 +28,7 @@ let customers = []; // מערך זמני של לקוחות
 let isEditing = false;
 let expenses = []; // מערך זמני לשמירת ההוצאות
 
-// טעינת לקוחות מ-Firestore לפי המשתמש הנוכחי
+// טעינת לקוחות מ-Firestore
 async function loadCustomers() {
     try {
         const snapshot = await db.collection(`customers_${currentUser}`).get();
@@ -55,7 +61,7 @@ function addCommasToNumber(number) {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-// פונקציה לחישוב עמלה לפי הנוסחה: (Project Price - Lead Cost - Dealer Fee - Project Expenses) / 2
+// פונקציה לחישוב עמלה
 function calculateCommission(customer) {
     const projectPrice = parseFloat(customer.projectPrice) || 0;
     const projectExpenses = parseFloat(customer.projectExpenses) || 0;
@@ -191,7 +197,7 @@ function renderCustomerDetails() {
                         <p><i class="fas fa-shield-alt"></i> <span>Payment Method:</span> ${customer.paymentMethod}</p>
                     </div>
                 `;
-                deleteBtn.style.display = 'none'; // מסתיר את כפתור המחיקה במצב צפייה
+                deleteBtn.style.display = 'none';
             } else {
                 container.innerHTML = `
                     <div class="header-section">
@@ -258,7 +264,7 @@ function renderCustomerDetails() {
                         </p>
                     </div>
                 `;
-                deleteBtn.style.display = 'block'; // מציג את כפתור המחיקה במצב עריכה
+                deleteBtn.style.display = 'block';
             }
         } else {
             container.innerHTML = '<p>Customer not found.</p>';
@@ -267,19 +273,19 @@ function renderCustomerDetails() {
     }
 }
 
-// פונקציה לחישוב Money Used לפי Project Price (זהה ל-Project Price)
+// פונקציה לחישוב Money Used
 function updateMoneyUsed() {
     const projectPrice = parseFloat(document.getElementById('projectPrice').value) || 0;
     document.getElementById('moneyUsed').value = projectPrice.toFixed(2);
 }
 
-// פונקציה לעדכון סך ההוצאות ב-Project Expenses
+// פונקציה לעדכון סך ההוצאות
 function updateProjectExpenses() {
     const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense), 0);
     document.getElementById('projectExpenses').value = totalExpenses.toFixed(2);
 }
 
-// פונקציה להוספת הוצאה חדשה
+// פונקציה להוספת הוצאה
 function addExpense(amount) {
     expenses.push(parseFloat(amount).toFixed(2));
     updateProjectExpenses();
@@ -318,14 +324,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     const projectTypeSelect = document.getElementById('projectType');
     if (projectTypeSelect) {
         projectTypeSelect.addEventListener('change', updateSelectedProjects);
-        updateSelectedProjects(); // עדכון ראשוני
+        updateSelectedProjects();
     }
 
     // עדכון תגיות הבנקים
     const bankSelect = document.getElementById('bank');
     if (bankSelect) {
         bankSelect.addEventListener('change', updateSelectedBanks);
-        updateSelectedBanks(); // עדכון ראשוני
+        updateSelectedBanks();
     }
 
     // עדכון Dashboard
@@ -351,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (isEditing) {
                     editBtn.textContent = 'Save';
                     editBtn.id = 'saveBtn';
-                    deleteBtn.style.display = 'block'; // מציג את כפתור המחיקה במצב עריכה
+                    deleteBtn.style.display = 'block';
                 } else {
                     // שמירת השינויים
                     const urlParams = new URLSearchParams(window.location.search);
@@ -375,11 +381,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                         status: document.getElementById('editStatus').value
                     };
                     customers[customerId] = updatedCustomer;
-                    if (saveCustomers()) {
-                        editBtn.textContent = 'Edit';
-                        editBtn.id = 'editBtn';
-                        deleteBtn.style.display = 'none'; // מסתיר את כפתור המחיקה לאחר שמירה
-                    }
+                    await saveCustomers();
+                    editBtn.textContent = 'Edit';
+                    editBtn.id = 'editBtn';
+                    deleteBtn.style.display = 'none';
                 }
                 renderCustomerDetails();
             });
@@ -388,9 +393,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
                     const urlParams = new URLSearchParams(window.location.search);
                     const customerId = urlParams.get('id');
-                    customers.splice(customerId, 1); // מוחק את הלקוח מהמערך
-                    await saveCustomers(); // מעדכן את ה-Local Storage לפי המשתמש
-                    window.location.href = 'customers.html'; // מחזיר לדף הלקוחות
+                    customers.splice(customerId, 1);
+                    await saveCustomers();
+                    window.location.href = 'customers.html';
                 }
             });
         }
@@ -415,6 +420,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 localStorage.setItem('currentUser', username);
                 loadCustomers().then(() => {
                     window.location.href = 'dashboard.html';
+                }).catch(error => {
+                    console.error('Error loading customers:', error);
+                    alert('Error loading data. Please try again.');
                 });
             } else {
                 document.getElementById('loginMessage').style.display = 'block';
@@ -492,15 +500,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             window.location.href = 'customers.html';
         });
 
-        // חישוב דינמי של Money Used לפי Project Price (זהה ל-Project Price)
+        // חישוב דינמי של Money Used
         const projectPriceInput = document.getElementById('projectPrice');
         const moneyUsedInput = document.getElementById('moneyUsed');
         if (projectPriceInput && moneyUsedInput) {
             projectPriceInput.addEventListener('input', updateMoneyUsed);
-            updateMoneyUsed(); // עדכון ראשוני
+            updateMoneyUsed();
         }
 
-        // ניהול הוספת הוצאות ב-Project Expenses
+        // ניהול הוספת הוצאות
         const addExpenseBtn = document.getElementById('addExpenseBtn');
         if (addExpenseBtn) {
             addExpenseBtn.addEventListener('click', () => {
