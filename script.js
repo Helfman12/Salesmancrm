@@ -1,14 +1,54 @@
+// הגדרות Firebase (החלף את הערכים מה-Config שלך ב-Firebase Console)
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// איניציאליזציה של Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
 if (!currentUser && !window.location.pathname.includes('index.html')) {
     window.location.href = 'index.html';
 }
 
-// טעינת לקוחות מה-Local Storage לפי המשתמש הנוכחי
-let customers = JSON.parse(localStorage.getItem(`customers_${currentUser}`)) || [];
-
+let customers = []; // מערך זמני של לקוחות
 let isEditing = false;
 let expenses = []; // מערך זמני לשמירת ההוצאות
+
+// טעינת לקוחות מ-Firestore לפי המשתמש הנוכחי
+async function loadCustomers() {
+    try {
+        const snapshot = await db.collection(`customers_${currentUser}`).get();
+        customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log(`Loaded customers for ${currentUser}:`, customers);
+    } catch (e) {
+        console.error('Error loading customers from Firestore:', e);
+        alert('Error loading customer data. Please try again later.');
+    }
+}
+
+// שמירת לקוחות ב-Firestore
+async function saveCustomers() {
+    try {
+        const batch = db.batch();
+        customers.forEach((customer, index) => {
+            const docRef = db.collection(`customers_${currentUser}`).doc(`customer_${index}`);
+            batch.set(docRef, customer);
+        });
+        await batch.commit();
+        console.log(`Saved customers for ${currentUser}:`, customers);
+    } catch (e) {
+        console.error('Error saving customers to Firestore:', e);
+        alert('Error saving data. Please try again later.');
+    }
+}
 
 // פונקציה להוספת פסיקים למספרים גבוהים
 function addCommasToNumber(number) {
@@ -22,13 +62,10 @@ function calculateCommission(customer) {
     const leadCostPercent = parseFloat(customer.leadCost) || 0;
     const dealerFeePercent = parseFloat(customer.dealerFee) || 0;
 
-    // המרת Lead Cost ו-Dealer Fee לדולרים
     const leadCost = (leadCostPercent / 100) * projectPrice;
     const dealerFee = (dealerFeePercent / 100) * projectPrice;
-
-    // חישוב העמלה: (Project Price - Lead Cost - Dealer Fee - Project Expenses) / 2
     const commission = (projectPrice - leadCost - dealerFee - projectExpenses) / 2;
-    return commission > 0 ? commission.toFixed(2) : 0; // מחזיר 0 אם העמלה שלילית
+    return commission > 0 ? commission.toFixed(2) : 0;
 }
 
 // פונקציה לעדכון נתונים ב-Dashboard
@@ -38,13 +75,8 @@ function updateDashboardStats() {
     const totalCommissionElement = document.querySelector('.value.commission');
 
     if (totalSalesElement && totalProjectsElement && totalCommissionElement) {
-        // חישוב סך המכירות (סכום כל ה-Project Price)
         const totalSales = customers.reduce((sum, customer) => sum + (parseFloat(customer.projectPrice) || 0), 0).toFixed(2);
-
-        // סך הפרויקטים (מספר הלקוחות)
         const totalProjects = customers.length;
-
-        // חישוב סך העמלות
         const totalCommission = customers.reduce((sum, customer) => sum + parseFloat(calculateCommission(customer)), 0).toFixed(2);
 
         totalSalesElement.textContent = `$${addCommasToNumber(totalSales)}`;
@@ -238,21 +270,13 @@ function renderCustomerDetails() {
 // פונקציה לחישוב Money Used לפי Project Price (זהה ל-Project Price)
 function updateMoneyUsed() {
     const projectPrice = parseFloat(document.getElementById('projectPrice').value) || 0;
-    const moneyUsedInput = document.getElementById('moneyUsed');
-    if (moneyUsedInput) {
-        moneyUsedInput.value = projectPrice.toFixed(2);
-        console.log(`Updated Money Used to: ${moneyUsedInput.value}`);
-    }
+    document.getElementById('moneyUsed').value = projectPrice.toFixed(2);
 }
 
 // פונקציה לעדכון סך ההוצאות ב-Project Expenses
 function updateProjectExpenses() {
     const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense), 0);
-    const projectExpensesInput = document.getElementById('projectExpenses');
-    if (projectExpensesInput) {
-        projectExpensesInput.value = totalExpenses.toFixed(2);
-        console.log(`Updated Project Expenses to: ${projectExpensesInput.value}`);
-    }
+    document.getElementById('projectExpenses').value = totalExpenses.toFixed(2);
 }
 
 // פונקציה להוספת הוצאה חדשה
@@ -260,7 +284,6 @@ function addExpense(amount) {
     expenses.push(parseFloat(amount).toFixed(2));
     updateProjectExpenses();
     renderExpenses();
-    console.log(`Added Expense: ${amount}, Total Expenses: ${expenses}`);
 }
 
 // פונקציה למחיקת הוצאה
@@ -268,7 +291,6 @@ function removeExpense(index) {
     expenses.splice(index, 1);
     updateProjectExpenses();
     renderExpenses();
-    console.log(`Removed Expense at index ${index}, Total Expenses: ${expenses}`);
 }
 
 // פונקציה להצגת רשימת ההוצאות
@@ -288,7 +310,10 @@ function renderExpenses() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // טעינת לקוחות מ-Firestore
+    await loadCustomers();
+
     // עדכון תגיות הפרויקטים
     const projectTypeSelect = document.getElementById('projectType');
     if (projectTypeSelect) {
@@ -321,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const editBtn = document.getElementById('editBtn');
         const deleteBtn = document.getElementById('deleteBtn');
         if (editBtn && deleteBtn) {
-            editBtn.addEventListener('click', () => {
+            editBtn.addEventListener('click', async () => {
                 isEditing = !isEditing;
                 if (isEditing) {
                     editBtn.textContent = 'Save';
@@ -350,21 +375,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         status: document.getElementById('editStatus').value
                     };
                     customers[customerId] = updatedCustomer;
-                    localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers)); // שמירה לפי המשתמש
-                    editBtn.textContent = 'Edit';
-                    editBtn.id = 'editBtn';
-                    deleteBtn.style.display = 'none'; // מסתיר את כפתור המחיקה לאחר שמירה
+                    if (saveCustomers()) {
+                        editBtn.textContent = 'Edit';
+                        editBtn.id = 'editBtn';
+                        deleteBtn.style.display = 'none'; // מסתיר את כפתור המחיקה לאחר שמירה
+                    }
                 }
                 renderCustomerDetails();
             });
 
-            // ניהול כפתור המחיקה
-            deleteBtn.addEventListener('click', () => {
+            deleteBtn.addEventListener('click', async () => {
                 if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
                     const urlParams = new URLSearchParams(window.location.search);
                     const customerId = urlParams.get('id');
                     customers.splice(customerId, 1); // מוחק את הלקוח מהמערך
-                    localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers)); // מעדכן את ה-Local Storage לפי המשתמש
+                    await saveCustomers(); // מעדכן את ה-Local Storage לפי המשתמש
                     window.location.href = 'customers.html'; // מחזיר לדף הלקוחות
                 }
             });
@@ -388,9 +413,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (validUsers[username] && validUsers[username] === password) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('currentUser', username);
-                customers = JSON.parse(localStorage.getItem(`customers_${username}`)) || [];
-                console.log(`User ${username} logged in. Loaded customers:`, customers);
-                window.location.href = 'dashboard.html';
+                loadCustomers().then(() => {
+                    window.location.href = 'dashboard.html';
+                });
             } else {
                 document.getElementById('loginMessage').style.display = 'block';
                 document.getElementById('loginMessage').textContent = 'Invalid username or password';
@@ -418,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ניהול טופס הוספת לקוח
     const addCustomerForm = document.getElementById('addCustomerForm');
     if (addCustomerForm) {
-        addCustomerForm.addEventListener('submit', function(event) {
+        addCustomerForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const projectTypeSelect = document.getElementById('projectType');
@@ -455,24 +480,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 paymentMethod: paymentMethod.value,
                 leadCost: document.getElementById('leadCost').value,
                 dealerFee: document.getElementById('dealerFee').value,
-                bank: selectedBanks, // שמירה כמערך של בנקים
+                bank: selectedBanks,
                 terms: document.getElementById('terms').value,
                 maxApproved: document.getElementById('maxApproved').value,
                 moneyUsed: document.getElementById('moneyUsed').value,
                 status: document.getElementById('status').value
             };
 
-            console.log('New Customer Data:', newCustomer);
-
             customers.push(newCustomer);
-            try {
-                localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
-                console.log(`Customer saved for ${currentUser}. Total customers:`, customers);
-                window.location.href = 'customers.html';
-            } catch (e) {
-                console.error('Error saving to Local Storage:', e);
-                alert('Error saving customer data. Please check your storage settings.');
-            }
+            await saveCustomers();
+            window.location.href = 'customers.html';
         });
 
         // חישוב דינמי של Money Used לפי Project Price (זהה ל-Project Price)
