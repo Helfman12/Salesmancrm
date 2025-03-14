@@ -25,19 +25,19 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
     window.location.href = 'index.html';
 }
 
-let customers = []; // מערך זמני של לקוחות
-let isEditing = false;
-let expenses = []; // מערך זמני לשמירת ההוצאות
+let customers = []; // מערך גלובלי של לקוחות
 
-// טעינת לקוחות מ-Firestore
+// טעינת לקוחות מ-Firestore לפי המשתמש הנוכחי
 async function loadCustomers() {
     try {
         const snapshot = await db.collection(`customers_${currentUser}`).get();
         customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log(`Loaded customers for ${currentUser}:`, customers);
+        return customers; // מחזיר את הלקוחות לטעינה עקבית
     } catch (e) {
         console.error('Error loading customers from Firestore:', e);
         alert('Error loading customer data. Please try again later.');
+        return [];
     }
 }
 
@@ -46,7 +46,7 @@ async function saveCustomers() {
     try {
         const batch = db.batch();
         customers.forEach((customer, index) => {
-            const docRef = db.collection(`customers_${currentUser}`).doc(`customer_${index}`);
+            const docRef = db.collection(`customers_${currentUser}`).doc(customer.id || `customer_${index}`);
             batch.set(docRef, customer);
         });
         await batch.commit();
@@ -318,8 +318,16 @@ function renderExpenses() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // טעינת לקוחות מ-Firestore
-    await loadCustomers();
+    // טעינת לקוחות מ-Firestore בכל דף
+    await loadCustomers().then(() => {
+        // עדכון Dashboard ו-Customers לאחר טעינה
+        if (window.location.pathname.includes('dashboard.html')) {
+            updateDashboardStats();
+        }
+        if (window.location.pathname.includes('customers.html')) {
+            renderCustomers();
+        }
+    });
 
     // עדכון תגיות הפרויקטים
     const projectTypeSelect = document.getElementById('projectType');
@@ -333,16 +341,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (bankSelect) {
         bankSelect.addEventListener('change', updateSelectedBanks);
         updateSelectedBanks();
-    }
-
-    // עדכון Dashboard
-    if (window.location.pathname.includes('dashboard.html')) {
-        updateDashboardStats();
-    }
-
-    // עדכון Customers
-    if (window.location.pathname.includes('customers.html')) {
-        renderCustomers();
     }
 
     // עדכון Customer Details
