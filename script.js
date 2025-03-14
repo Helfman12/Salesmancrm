@@ -5,8 +5,9 @@ const firebaseConfig = {
     projectId: "constructionsalesinterface",
     storageBucket: "constructionsalesinterface.firebasestorage.app",
     messagingSenderId: "938358742695",
-    appId: "1:938358742695:web:03ac6e8646528896b78582"
-};
+    appId: "1:938358742695:web:03ac6e8646528896b78582",
+    measurementId: "G-4D1H3P382N"
+  };
 
 // איניציאליזציה של Firebase
 try {
