@@ -34,7 +34,30 @@ function generateUniqueId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// טעינת לקוחות מ-Firestore לפי המשתמש הנוכחי
+// טעינת לקוחות מ-Local Storage כגיבוי
+function loadCustomersFromLocalStorage() {
+    const storedCustomers = localStorage.getItem(`customers_${currentUser}`);
+    if (storedCustomers) {
+        customers = JSON.parse(storedCustomers);
+        console.log(`Loaded ${customers.length} customers from Local Storage for ${currentUser}:`, customers);
+    } else {
+        customers = [];
+        console.log(`No customers found in Local Storage for ${currentUser}`);
+    }
+    return customers;
+}
+
+// שמירת לקוחות ב-Local Storage כגיבוי
+function saveCustomersToLocalStorage() {
+    try {
+        localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
+        console.log(`Saved ${customers.length} customers to Local Storage for ${currentUser}:`, customers);
+    } catch (e) {
+        console.error('Error saving customers to Local Storage:', e);
+    }
+}
+
+// טעינת לקוחות מ-Firestore
 async function loadCustomers() {
     try {
         const snapshot = await db.collection(`customers_${currentUser}`).get();
@@ -42,12 +65,15 @@ async function loadCustomers() {
         snapshot.forEach(doc => {
             customers.push({ id: doc.id, ...doc.data() });
         });
-        console.log(`Loaded ${customers.length} customers for ${currentUser}:`, customers);
+        console.log(`Loaded ${customers.length} customers from Firestore for ${currentUser}:`, customers);
+        // שמור גיבוי ב-Local Storage
+        saveCustomersToLocalStorage();
         return customers;
     } catch (e) {
         console.error('Error loading customers from Firestore:', e);
-        alert('Error loading customer data: ' + e.message);
-        return [];
+        alert('Error loading customer data from Firestore: ' + e.message + '. Loading from local backup...');
+        // טען מ-Local Storage אם Firestore נכשל
+        return loadCustomersFromLocalStorage();
     }
 }
 
@@ -63,12 +89,16 @@ async function saveCustomers() {
             batch.set(docRef, customer);
         }
         await batch.commit();
-        console.log(`Successfully saved ${customers.length} customers for ${currentUser}:`, customers);
+        console.log(`Successfully saved ${customers.length} customers to Firestore for ${currentUser}:`, customers);
+        // שמור גיבוי ב-Local Storage
+        saveCustomersToLocalStorage();
         // טען מחדש את הלקוחות לאחר שמירה
         await loadCustomers();
     } catch (e) {
         console.error('Error saving customers to Firestore:', e);
-        alert('Error saving data: ' + e.message);
+        alert('Error saving data to Firestore: ' + e.message + '. Data saved locally as backup.');
+        // שמור גיבוי ב-Local Storage גם אם Firestore נכשל
+        saveCustomersToLocalStorage();
     }
 }
 
@@ -104,6 +134,7 @@ function updateDashboardStats() {
         totalSalesElement.textContent = `$${addCommasToNumber(totalSales)}`;
         totalProjectsElement.textContent = addCommasToNumber(totalProjects);
         totalCommissionElement.textContent = `$${addCommasToNumber(totalCommission)}`;
+        console.log(`Updated Dashboard: Total Sales: $${totalSales}, Total Projects: ${totalProjects}, Total Commission: $${totalCommission}`);
     } else {
         console.log('Dashboard elements not found');
     }
@@ -135,6 +166,7 @@ function renderCustomers() {
             });
             container.appendChild(card);
         });
+        console.log(`Rendered ${customers.length} customers in Customers page`);
     } else {
         console.log('Customers container not found');
     }
