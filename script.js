@@ -1,10 +1,11 @@
 // בדיקת התחברות בעת טעינת הדפים
-if (localStorage.getItem('isLoggedIn') !== 'true' && !window.location.pathname.includes('index.html')) {
+const currentUser = localStorage.getItem('currentUser');
+if (!currentUser && !window.location.pathname.includes('index.html')) {
     window.location.href = 'index.html';
 }
 
-// טעינת לקוחות מה-Local Storage
-let customers = JSON.parse(localStorage.getItem('customers')) || [];
+// טעינת לקוחות מה-Local Storage לפי המשתמש הנוכחי
+let customers = JSON.parse(localStorage.getItem(`customers_${currentUser}`)) || [];
 
 let isEditing = false;
 let expenses = []; // מערך זמני לשמירת ההוצאות
@@ -79,6 +80,7 @@ function renderCustomers() {
 
 // פונקציה להתנתקות
 function logout() {
+    localStorage.removeItem('currentUser');
     localStorage.removeItem('isLoggedIn');
     window.location.href = 'index.html';
 }
@@ -370,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         status: document.getElementById('editStatus').value
                     };
                     customers[customerId] = updatedCustomer;
-                    localStorage.setItem('customers', JSON.stringify(customers));
+                    localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers)); // שמירה לפי המשתמש
                     editBtn.textContent = 'Edit';
                     editBtn.id = 'editBtn';
                     deleteBtn.style.display = 'none'; // מסתיר את כפתור המחיקה לאחר שמירה
@@ -384,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const urlParams = new URLSearchParams(window.location.search);
                     const customerId = urlParams.get('id');
                     customers.splice(customerId, 1); // מוחק את הלקוח מהמערך
-                    localStorage.setItem('customers', JSON.stringify(customers)); // מעדכן את ה-Local Storage
+                    localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers)); // מעדכן את ה-Local Storage לפי המשתמש
                     window.location.href = 'customers.html'; // מחזיר לדף הלקוחות
                 }
             });
@@ -400,8 +402,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            if (username === 'sales' && password === '1234') {
+            const validUsers = {
+                'matan': '123456',
+                'almog': '12345'
+            };
+
+            if (validUsers[username] && validUsers[username] === password) {
                 localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', username);
+                customers = JSON.parse(localStorage.getItem(`customers_${username}`)) || [];
                 window.location.href = 'dashboard.html';
             } else {
                 document.getElementById('loginMessage').style.display = 'block';
@@ -464,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             customers.push(newCustomer);
-            localStorage.setItem('customers', JSON.stringify(customers));
+            localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers)); // שמירה לפי המשתמש
             window.location.href = 'customers.html';
         });
 
