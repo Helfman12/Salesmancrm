@@ -238,13 +238,21 @@ function renderCustomerDetails() {
 // פונקציה לחישוב Money Used לפי Project Price (זהה ל-Project Price)
 function updateMoneyUsed() {
     const projectPrice = parseFloat(document.getElementById('projectPrice').value) || 0;
-    document.getElementById('moneyUsed').value = projectPrice.toFixed(2);
+    const moneyUsedInput = document.getElementById('moneyUsed');
+    if (moneyUsedInput) {
+        moneyUsedInput.value = projectPrice.toFixed(2);
+        console.log(`Updated Money Used to: ${moneyUsedInput.value}`);
+    }
 }
 
 // פונקציה לעדכון סך ההוצאות ב-Project Expenses
 function updateProjectExpenses() {
     const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense), 0);
-    document.getElementById('projectExpenses').value = totalExpenses.toFixed(2);
+    const projectExpensesInput = document.getElementById('projectExpenses');
+    if (projectExpensesInput) {
+        projectExpensesInput.value = totalExpenses.toFixed(2);
+        console.log(`Updated Project Expenses to: ${projectExpensesInput.value}`);
+    }
 }
 
 // פונקציה להוספת הוצאה חדשה
@@ -252,6 +260,7 @@ function addExpense(amount) {
     expenses.push(parseFloat(amount).toFixed(2));
     updateProjectExpenses();
     renderExpenses();
+    console.log(`Added Expense: ${amount}, Total Expenses: ${expenses}`);
 }
 
 // פונקציה למחיקת הוצאה
@@ -259,6 +268,7 @@ function removeExpense(index) {
     expenses.splice(index, 1);
     updateProjectExpenses();
     renderExpenses();
+    console.log(`Removed Expense at index ${index}, Total Expenses: ${expenses}`);
 }
 
 // פונקציה להצגת רשימת ההוצאות
@@ -274,38 +284,6 @@ function renderExpenses() {
                 <button class="remove-expense" onclick="removeExpense(${index})"><i class="fas fa-times"></i></button>
             `;
             expenseList.appendChild(expenseItem);
-        });
-    }
-}
-
-// פונקציה לעדכון תגיות הפרויקטים
-function updateSelectedProjects() {
-    const projectTypeSelect = document.getElementById('projectType');
-    const selectedProjectsDiv = document.getElementById('selectedProjects');
-    if (projectTypeSelect && selectedProjectsDiv) {
-        selectedProjectsDiv.innerHTML = '';
-        const selectedOptions = Array.from(projectTypeSelect.selectedOptions).map(option => option.value);
-        selectedOptions.forEach(project => {
-            const tag = document.createElement('span');
-            tag.className = `project-tag ${project.toLowerCase().replace(' ', '-')}`;
-            tag.textContent = project;
-            selectedProjectsDiv.appendChild(tag);
-        });
-    }
-}
-
-// פונקציה לעדכון תגיות הבנקים
-function updateSelectedBanks() {
-    const bankSelect = document.getElementById('bank');
-    const selectedBanksDiv = document.getElementById('selectedBanks');
-    if (bankSelect && selectedBanksDiv) {
-        selectedBanksDiv.innerHTML = '';
-        const selectedOptions = Array.from(bankSelect.selectedOptions).map(option => option.value);
-        selectedOptions.forEach(bank => {
-            const tag = document.createElement('span');
-            tag.className = 'bank-tag';
-            tag.textContent = bank;
-            selectedBanksDiv.appendChild(tag);
         });
     }
 }
@@ -411,6 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('currentUser', username);
                 customers = JSON.parse(localStorage.getItem(`customers_${username}`)) || [];
+                console.log(`User ${username} logged in. Loaded customers:`, customers);
                 window.location.href = 'dashboard.html';
             } else {
                 document.getElementById('loginMessage').style.display = 'block';
@@ -453,6 +432,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const bankSelect = document.getElementById('bank');
             const selectedBanks = Array.from(bankSelect.selectedOptions).map(option => option.value);
 
+            if (selectedBanks.length === 0) {
+                alert('Please select at least one bank.');
+                return;
+            }
+
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                alert('Please select a payment method.');
+                return;
+            }
+
             const newCustomer = {
                 name: document.getElementById('customerName').value,
                 address: document.getElementById('address').value,
@@ -462,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 projectType: selectedProjects,
                 projectPrice: document.getElementById('projectPrice').value,
                 projectExpenses: document.getElementById('projectExpenses').value,
-                paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
+                paymentMethod: paymentMethod.value,
                 leadCost: document.getElementById('leadCost').value,
                 dealerFee: document.getElementById('dealerFee').value,
                 bank: selectedBanks, // שמירה כמערך של בנקים
@@ -472,9 +462,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 status: document.getElementById('status').value
             };
 
+            console.log('New Customer Data:', newCustomer);
+
             customers.push(newCustomer);
-            localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers)); // שמירה לפי המשתמש
-            window.location.href = 'customers.html';
+            try {
+                localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
+                console.log(`Customer saved for ${currentUser}. Total customers:`, customers);
+                window.location.href = 'customers.html';
+            } catch (e) {
+                console.error('Error saving to Local Storage:', e);
+                alert('Error saving customer data. Please check your storage settings.');
+            }
         });
 
         // חישוב דינמי של Money Used לפי Project Price (זהה ל-Project Price)

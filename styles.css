@@ -98,7 +98,20 @@ select:focus {
     transform: scale(1.02);
 }
 
-select#projectType,
+select#projectType {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%233B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>') no-repeat right 15px center;
+    background-size: 12px;
+    padding-right: 40px;
+    cursor: pointer;
+    height: 45px;
+    transition: height 0.3s ease, transform 0.2s ease;
+}
+
+select#projectType:focus {
+    height: 200px;
+    transform: scale(1.02);
+}
+
 select#bank {
     background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%233B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>') no-repeat right 15px center;
     background-size: 12px;
@@ -108,9 +121,8 @@ select#bank {
     transition: height 0.3s ease, transform 0.2s ease;
 }
 
-select#projectType:focus,
 select#bank:focus {
-    height: 150px; /* גובה קטן יותר עבור Bank כי יש פחות אפשרויות */
+    height: 200px;
     transform: scale(1.02);
 }
 
@@ -212,6 +224,26 @@ button:active {
 
 .btn-primary:hover {
     background: #1e40af;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 10px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
 }
 
 .customer-cards {
@@ -389,12 +421,6 @@ button:active {
 .project-tag.main-panel-upgrade { background-color: #ec4899; color: white; }
 .project-tag.rewire { background-color: #6b7280; color: white; }
 .project-tag.repipe { background-color: #14b8a6; color: white; }
-
-.bank-tag.goodleap { background-color: #34d399; color: white; }
-.bank-tag.service-finance { background-color: #60a5fa; color: white; }
-.bank-tag.aqua { background-color: #22d3ee; color: white; }
-.bank-tag.slice { background-color: #a78bfa; color: white; }
-.bank-tag.mosaic { background-color: #f472b6; color: white; }
 
 .project-tag:hover,
 .bank-tag:hover {
@@ -598,6 +624,11 @@ button:active {
     background: #b91c1c;
 }
 
+.selected-banks .bank-tag {
+    background-color: #bfdbfe;
+    color: #1e40af;
+}
+
 .action-menu {
     position: fixed;
     bottom: 20px;
@@ -672,24 +703,11 @@ button:active {
     background: #059669;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-@keyframes shake {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
-    100% { transform: translateX(0); }
-}
-
 #loginMessage {
-    color: #2f855a;
+    color: #ef4444;
     margin-top: 10px;
     display: none;
+    font-size: 14px;
 }
 
 /* התאמה לטלפון */
@@ -721,8 +739,7 @@ button:active {
     .btn-primary {
         width: 100%;
     }
-    .selected-projects,
-    .selected-banks {
+    .selected-projects {
         justify-content: center;
     }
     .customer-details .header-section {
@@ -752,5 +769,9 @@ button:active {
         width: 35px;
         height: 35px;
         font-size: 14px;
+    }
+    #loginMessage {
+        font-size: 12px;
+        padding: 5px;
     }
 }
