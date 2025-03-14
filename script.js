@@ -26,14 +26,24 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
 }
 
 let customers = []; // מערך גלובלי של לקוחות
+let isEditing = false;
+let expenses = []; // מערך זמני לשמירת ההוצאות
+
+// פונקציה ליצירת מזהה ייחודי
+function generateUniqueId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
 
 // טעינת לקוחות מ-Firestore לפי המשתמש הנוכחי
 async function loadCustomers() {
     try {
         const snapshot = await db.collection(`customers_${currentUser}`).get();
-        customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        customers = [];
+        snapshot.forEach(doc => {
+            customers.push({ id: doc.id, ...doc.data() });
+        });
         console.log(`Loaded customers for ${currentUser}:`, customers);
-        return customers; // מחזיר את הלקוחות לטעינה עקבית
+        return customers;
     } catch (e) {
         console.error('Error loading customers from Firestore:', e);
         alert('Error loading customer data. Please try again later.');
@@ -45,12 +55,18 @@ async function loadCustomers() {
 async function saveCustomers() {
     try {
         const batch = db.batch();
-        customers.forEach((customer, index) => {
-            const docRef = db.collection(`customers_${currentUser}`).doc(customer.id || `customer_${index}`);
+        for (const customer of customers) {
+            // אם אין מזהה, צור חדש
+            if (!customer.id) {
+                customer.id = generateUniqueId();
+            }
+            const docRef = db.collection(`customers_${currentUser}`).doc(customer.id);
             batch.set(docRef, customer);
-        });
+        }
         await batch.commit();
         console.log(`Saved customers for ${currentUser}:`, customers);
+        // טען מחדש את הלקוחות לאחר שמירה
+        await loadCustomers();
     } catch (e) {
         console.error('Error saving customers to Firestore:', e);
         alert('Error saving data. Please try again later.');
@@ -327,6 +343,62 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (window.location.pathname.includes('customers.html')) {
             renderCustomers();
         }
+        if (window.location.pathname.includes('customer.html')) {
+            renderCustomerDetails();
+
+            // ניהול כפתור העריכה והמחיקה
+            const editBtn = document.getElementById('editBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+            if (editBtn && deleteBtn) {
+                editBtn.addEventListener('click', async () => {
+                    isEditing = !isEditing;
+                    if (isEditing) {
+                        editBtn.textContent = 'Save';
+                        editBtn.id = 'saveBtn';
+                        deleteBtn.style.display = 'block';
+                    } else {
+                        // שמירת השינויים
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const customerId = urlParams.get('id');
+                        const updatedCustomer = {
+                            id: customers[customerId].id, // שמר את ה-ID הקיים
+                            name: document.getElementById('editName').value,
+                            address: document.getElementById('editAddress').value,
+                            phone: document.getElementById('editPhone').value,
+                            age: document.getElementById('editAge').value,
+                            contractDate: document.getElementById('editContractDate').value,
+                            projectType: Array.from(document.getElementById('editProjectType').selectedOptions).map(option => option.value),
+                            projectPrice: document.getElementById('editProjectPrice').value,
+                            projectExpenses: document.getElementById('editProjectExpenses').value,
+                            paymentMethod: document.getElementById('editPaymentMethod').value,
+                            leadCost: document.getElementById('editLeadCost').value,
+                            dealerFee: document.getElementById('editDealerFee').value,
+                            bank: Array.from(document.getElementById('editBank').selectedOptions).map(option => option.value),
+                            terms: document.getElementById('editTerms').value,
+                            maxApproved: document.getElementById('editMaxApproved').value,
+                            moneyUsed: document.getElementById('editMoneyUsed').value,
+                            status: document.getElementById('editStatus').value
+                        };
+                        customers[customerId] = updatedCustomer;
+                        await saveCustomers();
+                        editBtn.textContent = 'Edit';
+                        editBtn.id = 'editBtn';
+                        deleteBtn.style.display = 'none';
+                    }
+                    renderCustomerDetails();
+                });
+
+                deleteBtn.addEventListener('click', async () => {
+                    if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const customerId = urlParams.get('id');
+                        customers.splice(customerId, 1);
+                        await saveCustomers();
+                        window.location.href = 'customers.html';
+                    }
+                });
+            }
+        }
     });
 
     // עדכון תגיות הפרויקטים
@@ -341,63 +413,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (bankSelect) {
         bankSelect.addEventListener('change', updateSelectedBanks);
         updateSelectedBanks();
-    }
-
-    // עדכון Customer Details
-    if (window.location.pathname.includes('customer.html')) {
-        renderCustomerDetails();
-
-        // ניהול כפתור העריכה והמחיקה
-        const editBtn = document.getElementById('editBtn');
-        const deleteBtn = document.getElementById('deleteBtn');
-        if (editBtn && deleteBtn) {
-            editBtn.addEventListener('click', async () => {
-                isEditing = !isEditing;
-                if (isEditing) {
-                    editBtn.textContent = 'Save';
-                    editBtn.id = 'saveBtn';
-                    deleteBtn.style.display = 'block';
-                } else {
-                    // שמירת השינויים
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const customerId = urlParams.get('id');
-                    const updatedCustomer = {
-                        name: document.getElementById('editName').value,
-                        address: document.getElementById('editAddress').value,
-                        phone: document.getElementById('editPhone').value,
-                        age: document.getElementById('editAge').value,
-                        contractDate: document.getElementById('editContractDate').value,
-                        projectType: Array.from(document.getElementById('editProjectType').selectedOptions).map(option => option.value),
-                        projectPrice: document.getElementById('editProjectPrice').value,
-                        projectExpenses: document.getElementById('editProjectExpenses').value,
-                        paymentMethod: document.getElementById('editPaymentMethod').value,
-                        leadCost: document.getElementById('editLeadCost').value,
-                        dealerFee: document.getElementById('editDealerFee').value,
-                        bank: Array.from(document.getElementById('editBank').selectedOptions).map(option => option.value),
-                        terms: document.getElementById('editTerms').value,
-                        maxApproved: document.getElementById('editMaxApproved').value,
-                        moneyUsed: document.getElementById('editMoneyUsed').value,
-                        status: document.getElementById('editStatus').value
-                    };
-                    customers[customerId] = updatedCustomer;
-                    await saveCustomers();
-                    editBtn.textContent = 'Edit';
-                    editBtn.id = 'editBtn';
-                    deleteBtn.style.display = 'none';
-                }
-                renderCustomerDetails();
-            });
-
-            deleteBtn.addEventListener('click', async () => {
-                if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const customerId = urlParams.get('id');
-                    customers.splice(customerId, 1);
-                    await saveCustomers();
-                    window.location.href = 'customers.html';
-                }
-            });
-        }
     }
 
     // ניהול Log In
@@ -476,6 +491,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
 
             const newCustomer = {
+                id: generateUniqueId(), // הוסף מזהה ייחודי
                 name: document.getElementById('customerName').value,
                 address: document.getElementById('address').value,
                 phone: document.getElementById('phone').value,
