@@ -42,11 +42,11 @@ async function loadCustomers() {
         snapshot.forEach(doc => {
             customers.push({ id: doc.id, ...doc.data() });
         });
-        console.log(`Loaded customers for ${currentUser}:`, customers);
+        console.log(`Loaded ${customers.length} customers for ${currentUser}:`, customers);
         return customers;
     } catch (e) {
         console.error('Error loading customers from Firestore:', e);
-        alert('Error loading customer data. Please try again later.');
+        alert('Error loading customer data: ' + e.message);
         return [];
     }
 }
@@ -54,32 +54,21 @@ async function loadCustomers() {
 // שמירת לקוחות ב-Firestore
 async function saveCustomers() {
     try {
-        // קודם כל, מחק את כל הלקוחות הקיימים ב-Firestore
-        const snapshot = await db.collection(`customers_${currentUser}`).get();
         const batch = db.batch();
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-        await batch.commit();
-        console.log(`Cleared existing customers for ${currentUser}`);
-
-        // שמור את הלקוחות החדשים
-        const saveBatch = db.batch();
         for (const customer of customers) {
             if (!customer.id) {
                 customer.id = generateUniqueId();
             }
             const docRef = db.collection(`customers_${currentUser}`).doc(customer.id);
-            saveBatch.set(docRef, customer);
+            batch.set(docRef, customer);
         }
-        await saveBatch.commit();
-        console.log(`Saved customers for ${currentUser}:`, customers);
-
+        await batch.commit();
+        console.log(`Successfully saved ${customers.length} customers for ${currentUser}:`, customers);
         // טען מחדש את הלקוחות לאחר שמירה
         await loadCustomers();
     } catch (e) {
         console.error('Error saving customers to Firestore:', e);
-        alert('Error saving data. Please try again later.');
+        alert('Error saving data: ' + e.message);
     }
 }
 
@@ -125,6 +114,10 @@ function renderCustomers() {
     const container = document.getElementById('customersList');
     if (container) {
         container.innerHTML = '';
+        if (customers.length === 0) {
+            container.innerHTML = '<p>No customers found.</p>';
+            return;
+        }
         customers.forEach((customer, index) => {
             const commission = calculateCommission(customer);
             const card = document.createElement('div');
