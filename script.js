@@ -122,6 +122,7 @@ function calculateCommission(customer) {
 
 // פונקציה לעדכון נתונים ב-Dashboard
 function updateDashboardStats() {
+    console.log('Updating Dashboard with customers:', customers);
     const totalSalesElement = document.querySelector('.value.sales');
     const totalProjectsElement = document.querySelector('.value.projects');
     const totalCommissionElement = document.querySelector('.value.commission');
@@ -136,17 +137,19 @@ function updateDashboardStats() {
         totalCommissionElement.textContent = `$${addCommasToNumber(totalCommission)}`;
         console.log(`Updated Dashboard: Total Sales: $${totalSales}, Total Projects: ${totalProjects}, Total Commission: $${totalCommission}`);
     } else {
-        console.log('Dashboard elements not found');
+        console.error('Dashboard elements not found:', { totalSalesElement, totalProjectsElement, totalCommissionElement });
     }
 }
 
 // פונקציה לטעינת לקוחות
 function renderCustomers() {
+    console.log('Rendering customers:', customers);
     const container = document.getElementById('customersList');
     if (container) {
         container.innerHTML = '';
         if (customers.length === 0) {
             container.innerHTML = '<p>No customers found.</p>';
+            console.log('No customers to display');
             return;
         }
         customers.forEach((customer, index) => {
@@ -168,7 +171,7 @@ function renderCustomers() {
         });
         console.log(`Rendered ${customers.length} customers in Customers page`);
     } else {
-        console.log('Customers container not found');
+        console.error('Customers container (customersList) not found in the DOM');
     }
 }
 
@@ -213,6 +216,7 @@ function updateSelectedBanks() {
 
 // פונקציה להצגת פרטי הלקוח
 function renderCustomerDetails() {
+    console.log('Rendering customer details with customers:', customers);
     const container = document.getElementById('customerDetails');
     const deleteBtn = document.getElementById('deleteBtn');
     if (container && deleteBtn) {
@@ -326,6 +330,8 @@ function renderCustomerDetails() {
             container.innerHTML = '<p>Customer not found.</p>';
             deleteBtn.style.display = 'none';
         }
+    } else {
+        console.error('Customer details container or delete button not found');
     }
 }
 
@@ -373,8 +379,10 @@ function renderExpenses() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('DOMContentLoaded event triggered for path:', window.location.pathname);
     // טעינת לקוחות מ-Firestore בכל דף
     await loadCustomers().then(() => {
+        console.log('Customers loaded successfully, proceeding to render...');
         // עדכון Dashboard ו-Customers לאחר טעינה
         if (window.location.pathname.includes('dashboard.html')) {
             updateDashboardStats();

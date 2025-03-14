@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK (גרסה 8.10.1) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
@@ -20,10 +21,8 @@
                 <a href="#" id="logoutBtn">Log Out</a>
             </nav>
         </header>
-        <main>
-            <button id="addCustomerBtn" class="btn-primary">Add New Customer</button>
-            <div id="customersList" class="customer-cards"></div>
-        </main>
+        <button class="btn-primary" id="addCustomerBtn">Add New Customer</button>
+        <div id="customersList" class="customer-cards"></div>
     </div>
     <script src="script.js"></script>
 </body>
