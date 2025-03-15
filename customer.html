@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="customer-details-container">
+    <div class="customer-container">
         <header>
             <h1>Customer Details</h1>
             <nav>
@@ -19,11 +19,20 @@
                 <a href="#" id="logoutBtn">Log Out</a>
             </nav>
         </header>
-        <div class="action-buttons">
-            <button class="btn-primary" id="editBtn">Edit</button>
-            <button class="btn-danger" id="deleteBtn">Delete</button>
-        </div>
-        <div id="customerDetails"></div>
+        <main>
+            <div id="customerDetails" class="customer-details">
+                <!-- פרטי הלקוח יתווספו כאן דרך JavaScript -->
+            </div>
+            <button id="editBtn" class="btn-primary">Edit</button>
+            <button id="deleteBtn" class="btn-danger" style="display: none;"><i class="fas fa-trash-alt"></i> Delete Customer</button>
+            <div class="action-menu">
+                <button id="actionBtn" class="action-btn"><i class="fas fa-plus"></i></button>
+                <div id="actionMenu" class="action-menu-content">
+                    <button onclick="alert('Upsell functionality coming soon!')">Upsell</button>
+                    <button onclick="alert('Add Homeowner functionality coming soon!')">Add Homeowner</button>
+                </div>
+            </div>
+        </main>
     </div>
     <script src="script.js"></script>
 </body>
