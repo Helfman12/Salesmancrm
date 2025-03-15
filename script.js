@@ -1,9 +1,14 @@
 // טעינה דינמית של מודולים של Firestore
-async function loadFirestoreModules() {
-    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
-    const { getFirestore, collection, getDocs, doc, writeBatch } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js');
-    return { initializeApp, getFirestore, collection, getDocs, doc, writeBatch };
-}
+(async () => {
+    const { initializeApp, getFirestore, collection, getDocs, doc, writeBatch } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js');
+    window.initializeApp = initializeApp;
+    window.getFirestore = getFirestore;
+    window.collection = collection;
+    window.getDocs = getDocs;
+    window.doc = doc;
+    window.writeBatch = writeBatch;
+    console.log('Firestore modules loaded successfully');
+})();
 
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
@@ -20,12 +25,11 @@ let db; // משתנה גלובלי עבור Firestore
 async function loadCustomers() {
     try {
         if (!db) {
-            const { getFirestore, collection, getDocs } = await loadFirestoreModules();
-            db = getFirestore(window.firebaseApp); // השתמש ב-window.firebaseApp שהוגדר ב-HTML
+            db = window.getFirestore(window.firebaseApp); // השתמש ב-window.getFirestore שהוגדר ב-HTML
         }
         console.log('Attempting to load customers from Firestore...');
-        const customersRef = collection(db, 'customers');
-        const snapshot = await getDocs(customersRef);
+        const customersRef = window.collection(db, 'customers');
+        const snapshot = await window.getDocs(customersRef);
         customers = [];
         snapshot.forEach(doc => {
             customers.push({ id: doc.id, ...doc.data() });
@@ -54,17 +58,16 @@ async function loadCustomers() {
 async function saveCustomers(customersToSave) {
     try {
         if (!db) {
-            const { getFirestore, doc, writeBatch } = await loadFirestoreModules();
-            db = getFirestore(window.firebaseApp);
+            db = window.getFirestore(window.firebaseApp);
         }
         // שמור ב-Local Storage
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customersToSave));
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
 
         // סנכרן עם Firestore
-        const batch = writeBatch(db);
+        const batch = window.writeBatch(db);
         customersToSave.forEach(customer => {
-            const customerRef = doc(db, 'customers', customer.id);
+            const customerRef = window.doc(db, 'customers', customer.id);
             batch.set(customerRef, customer);
         });
         await batch.commit();
