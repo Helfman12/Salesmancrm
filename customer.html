@@ -7,25 +7,9 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
-            authDomain: "constructionsalesinterface.firebaseapp.com",
-            projectId: "constructionsalesinterface",
-            storageBucket: "constructionsalesinterface.appspot.com",
-            messagingSenderId: "938357842695",
-            appId: "1:938357842695:web:03ac6e8646528896b78582",
-            measurementId: "G-4D1H3P382N"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.firebaseApp = app; // שמור את האפליקציה בגלובל כדי ש-`script.js` יוכל להשתמש בה
-        window.firestoreDb = db;
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <script src="script.js"></script>
 </head>
 <body>
     <div class="customer-container">

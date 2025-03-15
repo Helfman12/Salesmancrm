@@ -1,5 +1,17 @@
-// גישה ל-Firestore מהמשתנים הגלובליים שנוצרו ב-`dashboard.html`
-const db = window.firestoreDb;
+// אתחול Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
+    authDomain: "constructionsalesinterface.firebaseapp.com",
+    projectId: "constructionsalesinterface",
+    storageBucket: "constructionsalesinterface.appspot.com",
+    messagingSenderId: "938357842695",
+    appId: "1:938357842695:web:03ac6e8646528896b78582",
+    measurementId: "G-4D1H3P382N"
+};
+
+// אתחל את Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(app);
 
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
