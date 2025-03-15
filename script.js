@@ -1,17 +1,5 @@
-// אתחול Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
-    authDomain: "constructionsalesinterface.firebaseapp.com",
-    projectId: "constructionsalesinterface",
-    storageBucket: "constructionsalesinterface.appspot.com",
-    messagingSenderId: "938357842695",
-    appId: "1:938357842695:web:03ac6e8646528896b78582",
-    measurementId: "G-4D1H3P382N"
-};
-
-// אתחל את Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(app);
+// גישה ל-Firestore מהמשתנים הגלובליים שנוצרו בדפים
+const db = window.firestoreDb;
 
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
@@ -26,6 +14,9 @@ let expenses = []; // מערך זמני לשמירת ההוצאות
 // טעינת לקוחות מ-Firestore וסנכרון עם Local Storage
 async function loadCustomers() {
     try {
+        if (!db) {
+            throw new Error('Firestore database not initialized');
+        }
         // נסה לטעון מ-Firestore
         const customersRef = db.collection('customers');
         const snapshot = await customersRef.get();
@@ -56,6 +47,9 @@ async function loadCustomers() {
 // שמירת לקוחות ב-Local Storage ו-Firestore
 async function saveCustomers(customersToSave) {
     try {
+        if (!db) {
+            throw new Error('Firestore database not initialized');
+        }
         // שמור ב-Local Storage
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customersToSave));
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
