@@ -10,7 +10,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
@@ -26,7 +26,11 @@
         const db = getFirestore(app);
         window.firebaseApp = app;
         window.firestoreDb = db;
-        console.log('Firebase initialized successfully in customers.html');
+        window.collection = collection; // העבר את הפונקציה ל-window
+        window.getDocs = getDocs;      // העבר את הפונקציה ל-window
+        window.doc = doc;              // העבר את הפונקציה ל-window
+        window.writeBatch = writeBatch; // העבר את הפונקציה ל-window
+        console.log('Firebase initialized successfully in customers.html with Firestore functions');
     </script>
 </head>
 <body>

@@ -17,8 +17,8 @@ async function loadCustomers() {
         }
         db = window.firestoreDb; // השתמש ב-window.firestoreDb שהוגדר ב-HTML
         console.log('Attempting to load customers from Firestore...');
-        const customersRef = collection(db, 'customers'); // תחביר גרסה 9
-        const snapshot = await getDocs(customersRef); // תחביר גרסה 9
+        const customersRef = window.collection(db, 'customers'); // השתמש ב-window.collection
+        const snapshot = await window.getDocs(customersRef);     // השתמש ב-window.getDocs
         customers = [];
         snapshot.forEach(doc => {
             customers.push({ id: doc.id, ...doc.data() });
@@ -55,9 +55,9 @@ async function saveCustomers(customersToSave) {
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
 
         // סנכרן עם Firestore
-        const batch = writeBatch(db); // תחביר גרסה 9
+        const batch = window.writeBatch(db); // השתמש ב-window.writeBatch
         customersToSave.forEach(customer => {
-            const customerRef = doc(db, 'customers', customer.id); // תחביר גרסה 9
+            const customerRef = window.doc(db, 'customers', customer.id); // השתמש ב-window.doc
             batch.set(customerRef, customer);
         });
         await batch.commit();
