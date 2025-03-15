@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
@@ -25,7 +26,11 @@
         const db = getFirestore(app);
         window.firebaseApp = app;
         window.firestoreDb = db;
-        console.log('Firebase initialized successfully in customer.html');
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.writeBatch = writeBatch;
+        console.log('Firebase initialized successfully in index.html with Firestore functions');
     </script>
 </head>
 <body>
