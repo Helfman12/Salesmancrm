@@ -1,5 +1,5 @@
 // גישה ל-Firestore מהמשתנים הגלובליים שנוצרו בדפים
-const db = window.firestoreDb;
+let db = window.firestoreDb;
 
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
