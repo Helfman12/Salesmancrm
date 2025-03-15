@@ -54,7 +54,7 @@ async function saveCustomers(customersToSave) {
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
 
         // סנכרן עם Firestore
-        const batch = db.batch();
+        const batch = db.batch(); // השתמש ב-db.batch() כראוי
         customersToSave.forEach(customer => {
             const customerRef = db.collection('customers').doc(customer.id);
             batch.set(customerRef, customer);
