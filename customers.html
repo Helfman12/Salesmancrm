@@ -26,10 +26,10 @@
         const db = getFirestore(app);
         window.firebaseApp = app;
         window.firestoreDb = db;
-        window.collection = collection; // העבר את הפונקציה ל-window
-        window.getDocs = getDocs;      // העבר את הפונקציה ל-window
-        window.doc = doc;              // העבר את הפונקציה ל-window
-        window.writeBatch = writeBatch; // העבר את הפונקציה ל-window
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.writeBatch = writeBatch;
         console.log('Firebase initialized successfully in customers.html with Firestore functions');
     </script>
 </head>
