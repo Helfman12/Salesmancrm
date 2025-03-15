@@ -8,7 +8,7 @@ const firebaseConfig = {
     appId: "1:938358742695:web:03ac6e8646528896b78582",
     measurementId: "G-4D1H3P382N"
   };
-  
+
 // איניציאליזציה של Firebase
 try {
     firebase.initializeApp(firebaseConfig);
@@ -25,31 +25,38 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
     window.location.href = 'index.html';
 }
 
-let customers = []; // מערך גלובלי של לקוחות
-let isEditing = false;
-let expenses = []; // מערך זמני לשמירת ההוצאות
+// אובייקט גלובלי לשמירת מצב
+const appState = {
+    customers: []
+};
 
-// טעינת לקוחות מ-Local Storage
+// טעינת לקוחות מ-Local Storage עם שמירה ב-appState
 function loadCustomers() {
     const storedCustomers = localStorage.getItem(`customers_${currentUser}`);
     if (storedCustomers) {
-        customers = JSON.parse(storedCustomers);
-        console.log(`Loaded ${customers.length} customers from Local Storage for ${currentUser}:`, customers);
+        appState.customers = JSON.parse(storedCustomers);
+        console.log(`Loaded ${appState.customers.length} customers from Local Storage for ${currentUser}:`, appState.customers);
     } else {
-        customers = [];
+        appState.customers = [];
         console.log(`No customers found in Local Storage for ${currentUser}`);
     }
+    return appState.customers;
 }
 
 // שמירת לקוחות ב-Local Storage
 function saveCustomers() {
     try {
-        localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
-        console.log(`Saved ${customers.length} customers to Local Storage for ${currentUser}:`, customers);
+        localStorage.setItem(`customers_${currentUser}`, JSON.stringify(appState.customers));
+        console.log(`Saved ${appState.customers.length} customers to Local Storage for ${currentUser}:`, appState.customers);
     } catch (e) {
         console.error('Error saving customers to Local Storage:', e);
         alert('Error saving data: ' + e.message);
     }
+}
+
+// פונקציה ליצירת מזהה ייחודי
+function generateUniqueId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
 // פונקציה להוספת פסיקים למספרים גבוהים
@@ -72,15 +79,15 @@ function calculateCommission(customer) {
 
 // פונקציה לעדכון נתונים ב-Dashboard
 function updateDashboardStats() {
-    console.log('Updating Dashboard with customers:', customers);
+    console.log('Updating Dashboard with customers:', appState.customers);
     const totalSalesElement = document.querySelector('.value.sales');
     const totalProjectsElement = document.querySelector('.value.projects');
     const totalCommissionElement = document.querySelector('.value.commission');
 
     if (totalSalesElement && totalProjectsElement && totalCommissionElement) {
-        const totalSales = customers.reduce((sum, customer) => sum + (parseFloat(customer.projectPrice) || 0), 0).toFixed(2);
-        const totalProjects = customers.length;
-        const totalCommission = customers.reduce((sum, customer) => sum + parseFloat(calculateCommission(customer)), 0).toFixed(2);
+        const totalSales = appState.customers.reduce((sum, customer) => sum + (parseFloat(customer.projectPrice) || 0), 0).toFixed(2);
+        const totalProjects = appState.customers.length;
+        const totalCommission = appState.customers.reduce((sum, customer) => sum + parseFloat(calculateCommission(customer)), 0).toFixed(2);
 
         totalSalesElement.textContent = `$${addCommasToNumber(totalSales)}`;
         totalProjectsElement.textContent = addCommasToNumber(totalProjects);
@@ -88,14 +95,13 @@ function updateDashboardStats() {
         console.log(`Updated Dashboard: Total Sales: $${totalSales}, Total Projects: ${totalProjects}, Total Commission: $${totalCommission}`);
     } else {
         console.error('Dashboard elements not found:', { totalSalesElement, totalProjectsElement, totalCommissionElement });
-        // נסה שוב לאחר 100ms
-        setTimeout(updateDashboardStats, 100);
+        setTimeout(updateDashboardStats, 100); // נסה שוב לאחר 100ms
     }
 }
 
 // פונקציה לטעינת לקוחות
 function renderCustomers() {
-    console.log('Rendering customers:', customers);
+    console.log('Rendering customers:', appState.customers);
     const container = document.getElementById('customersList');
     if (!container) {
         console.error('Customers container (customersList) not found in the DOM. Retrying in 100ms...');
@@ -104,13 +110,13 @@ function renderCustomers() {
     }
 
     container.innerHTML = '';
-    if (customers.length === 0) {
+    if (appState.customers.length === 0) {
         container.innerHTML = '<p>No customers found.</p>';
         console.log('No customers to display');
         return;
     }
 
-    customers.forEach((customer, index) => {
+    appState.customers.forEach((customer, index) => {
         const commission = calculateCommission(customer);
         const card = document.createElement('div');
         card.className = 'customer-card';
@@ -127,7 +133,7 @@ function renderCustomers() {
         });
         container.appendChild(card);
     });
-    console.log(`Rendered ${customers.length} customers in Customers page`);
+    console.log(`Rendered ${appState.customers.length} customers in Customers page`);
 }
 
 // פונקציה להתנתקות
@@ -171,7 +177,7 @@ function updateSelectedBanks() {
 
 // פונקציה להצגת פרטי הלקוח
 function renderCustomerDetails() {
-    console.log('Rendering customer details with customers:', customers);
+    console.log('Rendering customer details with customers:', appState.customers);
     const container = document.getElementById('customerDetails');
     const deleteBtn = document.getElementById('deleteBtn');
     if (!container || !deleteBtn) {
@@ -182,7 +188,7 @@ function renderCustomerDetails() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('id');
-    const customer = customers[customerId];
+    const customer = appState.customers[customerId];
 
     if (customer) {
         const commission = calculateCommission(customer);
@@ -364,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const urlParams = new URLSearchParams(window.location.search);
                     const customerId = urlParams.get('id');
                     const updatedCustomer = {
-                        id: customers[customerId].id, // שמר את ה-ID הקיים
+                        id: appState.customers[customerId].id, // שמר את ה-ID הקיים
                         name: document.getElementById('editName').value,
                         address: document.getElementById('editAddress').value,
                         phone: document.getElementById('editPhone').value,
@@ -382,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         moneyUsed: document.getElementById('editMoneyUsed').value,
                         status: document.getElementById('editStatus').value
                     };
-                    customers[customerId] = updatedCustomer;
+                    appState.customers[customerId] = updatedCustomer;
                     saveCustomers();
                     editBtn.textContent = 'Edit';
                     editBtn.id = 'editBtn';
@@ -395,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
                     const urlParams = new URLSearchParams(window.location.search);
                     const customerId = urlParams.get('id');
-                    customers.splice(customerId, 1);
+                    appState.customers.splice(customerId, 1);
                     saveCustomers();
                     window.location.href = 'customers.html';
                 }
@@ -508,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 status: document.getElementById('status').value
             };
 
-            customers.push(newCustomer);
+            appState.customers.push(newCustomer);
             saveCustomers();
             window.location.href = 'customers.html';
         });
