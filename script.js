@@ -16,8 +16,9 @@ async function loadCustomers() {
             throw new Error('Firestore database not initialized');
         }
         console.log('Attempting to load customers from Firestore...');
-        const customersRef = db.collection('customers');
-        const snapshot = await customersRef.get();
+        // שימוש בתחביר של גרסה 9: collection(db, 'customers')
+        const customersRef = collection(db, 'customers');
+        const snapshot = await getDocs(customersRef);
         customers = [];
         snapshot.forEach(doc => {
             customers.push({ id: doc.id, ...doc.data() });
@@ -54,9 +55,9 @@ async function saveCustomers(customersToSave) {
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
 
         // סנכרן עם Firestore
-        const batch = db.batch(); // השתמש ב-db.batch() כראוי
+        const batch = writeBatch(db); // שימוש ב-writeBatch
         customersToSave.forEach(customer => {
-            const customerRef = db.collection('customers').doc(customer.id);
+            const customerRef = doc(db, 'customers', customer.id);
             batch.set(customerRef, customer);
         });
         await batch.commit();
