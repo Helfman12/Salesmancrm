@@ -1,14 +1,14 @@
 // אתחול Firebase (הספריות יוטענו ב-HTML)
 const firebaseConfig = {
-    apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
+    apiKey: "AIzaSyBFfuD-wxjz6AXqjeHIsCV_2Z4reflu2ps",
     authDomain: "constructionsalesinterface.firebaseapp.com",
     projectId: "constructionsalesinterface",
-    storageBucket: "constructionsalesinterface.appspot.com",
-    messagingSenderId: "938357842695",
-    appId: "1:938357842695:web:03ac6e8646528896b78582",
+    storageBucket: "constructionsalesinterface.firebasestorage.app",
+    messagingSenderId: "938358742695",
+    appId: "1:938358742695:web:03ac6e8646528896b78582",
     measurementId: "G-4D1H3P382N"
-};
-
+  };
+  
 // אתחול Firebase ו-Firestore
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -20,6 +20,7 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
 }
 
 let customers = []; // מערך גלובלי ללקוחות
+let expenses = []; // מערך זמני להוצאות
 
 // טעינת לקוחות מ-Firestore
 async function loadCustomers() {
@@ -82,7 +83,6 @@ function calculateCommission(customer) {
 
 // עדכון נתונים ב-Dashboard
 function updateDashboardStats(customers) {
-    console.log('מעדכן את ה-Dashboard עם לקוחות:', customers);
     const totalSalesElement = document.querySelector('.value.sales');
     const totalProjectsElement = document.querySelector('.value.projects');
     const totalCommissionElement = document.querySelector('.value.commission');
@@ -95,22 +95,13 @@ function updateDashboardStats(customers) {
         totalSalesElement.textContent = `$${addCommasToNumber(totalSales)}`;
         totalProjectsElement.textContent = addCommasToNumber(totalProjects);
         totalCommissionElement.textContent = `$${addCommasToNumber(totalCommission)}`;
-        console.log(`עודכן: מכירות: $${totalSales}, פרויקטים: ${totalProjects}, עמלה: $${totalCommission}`);
-    } else {
-        console.error('אלמנטים ב-Dashboard לא נמצאו, מנסה שוב בעוד 100ms');
-        setTimeout(() => updateDashboardStats(customers), 100);
     }
 }
 
 // הצגת לקוחות ב-Customers
 function renderCustomers(customers) {
-    console.log('מציג לקוחות:', customers);
     const container = document.getElementById('customersList');
-    if (!container) {
-        console.error('קונטיינר לקוחות לא נמצא, מנסה שוב בעוד 100ms');
-        setTimeout(() => renderCustomers(customers), 100);
-        return;
-    }
+    if (!container) return;
 
     container.innerHTML = '';
     if (customers.length === 0) {
@@ -135,19 +126,85 @@ function renderCustomers(customers) {
         });
         container.appendChild(card);
     });
-    console.log(`הצגתי ${customers.length} לקוחות`);
 }
 
-// התנתקות
-function logout() {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('isLoggedIn');
-    window.location.href = 'index.html';
+// עדכון תגיות הפרויקטים
+function updateSelectedProjects() {
+    const projectTypeSelect = document.getElementById('projectType');
+    const selectedProjectsDiv = document.getElementById('selectedProjects');
+    if (projectTypeSelect && selectedProjectsDiv) {
+        selectedProjectsDiv.innerHTML = '';
+        const selectedOptions = Array.from(projectTypeSelect.selectedOptions).map(option => option.value);
+        selectedOptions.forEach(project => {
+            const tag = document.createElement('span');
+            tag.className = `project-tag ${project.toLowerCase().replace(' ', '-')}`;
+            tag.textContent = project;
+            selectedProjectsDiv.appendChild(tag);
+        });
+    }
 }
 
-// טעינה ראשונית
+// עדכון תגיות הבנקים
+function updateSelectedBanks() {
+    const bankSelect = document.getElementById('bank');
+    const selectedBanksDiv = document.getElementById('selectedBanks');
+    if (bankSelect && selectedBanksDiv) {
+        selectedBanksDiv.innerHTML = '';
+        const selectedOptions = Array.from(bankSelect.selectedOptions).map(option => option.value);
+        selectedOptions.forEach(bank => {
+            const tag = document.createElement('span');
+            tag.className = 'bank-tag';
+            tag.textContent = bank;
+            selectedBanksDiv.appendChild(tag);
+        });
+    }
+}
+
+// הוספת הוצאה
+function addExpense(amount) {
+    expenses.push(parseFloat(amount).toFixed(2));
+    updateProjectExpenses();
+    renderExpenses();
+}
+
+// מחיקת הוצאה
+function removeExpense(index) {
+    expenses.splice(index, 1);
+    updateProjectExpenses();
+    renderExpenses();
+}
+
+// הצגת הוצאות
+function renderExpenses() {
+    const expenseList = document.getElementById('expenseList');
+    if (expenseList) {
+        expenseList.innerHTML = '';
+        expenses.forEach((expense, index) => {
+            const expenseItem = document.createElement('div');
+            expenseItem.className = 'expense-item';
+            expenseItem.innerHTML = `
+                $${addCommasToNumber(expense)}
+                <button class="remove-expense" onclick="removeExpense(${index})"><i class="fas fa-times"></i></button>
+            `;
+            expenseList.appendChild(expenseItem);
+        });
+    }
+}
+
+// עדכון סך ההוצאות
+function updateProjectExpenses() {
+    const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense), 0);
+    document.getElementById('projectExpenses').value = totalExpenses.toFixed(2);
+}
+
+// עדכון Money Used
+function updateMoneyUsed() {
+    const projectPrice = parseFloat(document.getElementById('projectPrice').value) || 0;
+    document.getElementById('moneyUsed').value = projectPrice.toFixed(2);
+}
+
+// ניהול טופס הוספת לקוח
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('דף נטען:', window.location.pathname);
     await loadCustomers();
 
     if (window.location.pathname.includes('dashboard.html')) {
@@ -157,38 +214,80 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderCustomers(customers);
     }
 
-    // ניהול התחברות
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(event) {
+    const addCustomerForm = document.getElementById('addCustomerForm');
+    if (addCustomerForm) {
+        addCustomerForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const validUsers = { 'matan': '123456', 'almog': '12345' };
 
-            if (validUsers[username] && validUsers[username] === password) {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', username);
-                await loadCustomers();
-                window.location.href = 'dashboard.html';
-            } else {
-                document.getElementById('loginMessage').textContent = 'שם משתמש או סיסמה שגויים';
-                document.getElementById('loginMessage').style.display = 'block';
+            const projectTypeSelect = document.getElementById('projectType');
+            const selectedProjects = Array.from(projectTypeSelect.selectedOptions).map(option => option.value);
+            if (selectedProjects.length === 0) {
+                alert('בחר לפחות סוג פרויקט אחד.');
+                return;
             }
-        });
-    }
 
-    // ניהול התנתקות
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
+            const bankSelect = document.getElementById('bank');
+            const selectedBanks = Array.from(bankSelect.selectedOptions).map(option => option.value);
+            if (selectedBanks.length === 0) {
+                alert('בחר לפחות בנק אחד.');
+                return;
+            }
 
-    // ניהול הוספת לקוח
-    const addCustomerBtn = document.getElementById('addCustomerBtn');
-    if (addCustomerBtn) {
-        addCustomerBtn.addEventListener('click', () => {
-            window.location.href = 'add-customer.html';
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                alert('בחר שיטת תשלום.');
+                return;
+            }
+
+            const newCustomer = {
+                id: generateUniqueId(),
+                name: document.getElementById('customerName').value,
+                address: document.getElementById('address').value,
+                phone: document.getElementById('phone').value,
+                age: document.getElementById('age').value,
+                contractDate: document.getElementById('contractDate').value,
+                projectType: selectedProjects,
+                projectPrice: document.getElementById('projectPrice').value,
+                projectExpenses: document.getElementById('projectExpenses').value,
+                paymentMethod: paymentMethod.value,
+                leadCost: document.getElementById('leadCost').value,
+                dealerFee: document.getElementById('dealerFee').value,
+                bank: selectedBanks,
+                terms: document.getElementById('terms').value,
+                maxApproved: document.getElementById('maxApproved').value,
+                moneyUsed: document.getElementById('moneyUsed').value,
+                status: document.getElementById('status').value
+            };
+
+            customers.push(newCustomer);
+            await saveCustomers(customers);
+            window.location.href = 'customers.html';
         });
+
+        // חישוב Money Used
+        const projectPriceInput = document.getElementById('projectPrice');
+        if (projectPriceInput) {
+            projectPriceInput.addEventListener('input', updateMoneyUsed);
+            updateMoneyUsed();
+        }
+
+        // הוספת הוצאות
+        const addExpenseBtn = document.getElementById('addExpenseBtn');
+        if (addExpenseBtn) {
+            addExpenseBtn.addEventListener('click', () => {
+                const amount = prompt("הזן סכום הוצאה ($):");
+                if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+                    addExpense(amount);
+                } else {
+                    alert("הזן סכום הוצאה תקין.");
+                }
+            });
+        }
+
+        // עדכון תגיות
+        const projectTypeSelect = document.getElementById('projectType');
+        if (projectTypeSelect) projectTypeSelect.addEventListener('change', updateSelectedProjects);
+        const bankSelect = document.getElementById('bank');
+        if (bankSelect) bankSelect.addEventListener('change', updateSelectedBanks);
     }
 });
