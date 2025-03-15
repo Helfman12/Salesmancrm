@@ -1,24 +1,3 @@
-// הגדרות Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyBFfuD-wxjz6AXqjeHIsCV_2Z4reflu2ps",
-    authDomain: "constructionsalesinterface.firebaseapp.com",
-    projectId: "constructionsalesinterface",
-    storageBucket: "constructionsalesinterface.firebasestorage.app",
-    messagingSenderId: "938358742695",
-    appId: "1:938358742695:web:03ac6e8646528896b78582",
-    measurementId: "G-4D1H3P382N"
-  };
-
-// איניציאליזציה של Firebase
-try {
-    firebase.initializeApp(firebaseConfig);
-    console.log('Firebase initialized successfully');
-} catch (error) {
-    console.error('Detailed Firebase initialization error:', error);
-    alert('Error initializing Firebase: ' + error.message);
-}
-const db = firebase.firestore();
-
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
 if (!currentUser && !window.location.pathname.includes('index.html')) {
@@ -34,8 +13,8 @@ function generateUniqueId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// טעינת לקוחות מ-Local Storage כגיבוי
-function loadCustomersFromLocalStorage() {
+// טעינת לקוחות מ-Local Storage
+function loadCustomers() {
     const storedCustomers = localStorage.getItem(`customers_${currentUser}`);
     if (storedCustomers) {
         customers = JSON.parse(storedCustomers);
@@ -47,69 +26,14 @@ function loadCustomersFromLocalStorage() {
     return customers;
 }
 
-// שמירת לקוחות ב-Local Storage כגיבוי
-function saveCustomersToLocalStorage() {
+// שמירת לקוחות ב-Local Storage
+function saveCustomers() {
     try {
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
         console.log(`Saved ${customers.length} customers to Local Storage for ${currentUser}:`, customers);
     } catch (e) {
         console.error('Error saving customers to Local Storage:', e);
-    }
-}
-
-// טעינת לקוחות מ-Firestore עם ניסיון חוזר
-async function loadCustomers(attempt = 1, maxAttempts = 3) {
-    try {
-        const snapshot = await db.collection(`customers_${currentUser}`).get();
-        customers = [];
-        snapshot.forEach(doc => {
-            customers.push({ id: doc.id, ...doc.data() });
-        });
-        console.log(`Loaded ${customers.length} customers from Firestore for ${currentUser}:`, customers);
-        // שמור גיבוי ב-Local Storage
-        saveCustomersToLocalStorage();
-        return customers;
-    } catch (e) {
-        console.error(`Attempt ${attempt}/${maxAttempts} - Error loading customers from Firestore:`, e);
-        if (attempt < maxAttempts) {
-            console.log(`Retrying loadCustomers (attempt ${attempt + 1}/${maxAttempts})...`);
-            return await loadCustomers(attempt + 1, maxAttempts);
-        } else {
-            console.error('Max attempts reached. Loading from local backup...');
-            alert('Error loading customer data from Firestore after multiple attempts: ' + e.message + '. Loading from local backup...');
-            return loadCustomersFromLocalStorage();
-        }
-    }
-}
-
-// שמירת לקוחות ב-Firestore עם ניסיון חוזר
-async function saveCustomers(attempt = 1, maxAttempts = 3) {
-    try {
-        const batch = db.batch();
-        for (const customer of customers) {
-            if (!customer.id) {
-                customer.id = generateUniqueId();
-            }
-            const docRef = db.collection(`customers_${currentUser}`).doc(customer.id);
-            batch.set(docRef, customer);
-        }
-        await batch.commit();
-        console.log(`Successfully saved ${customers.length} customers to Firestore for ${currentUser}:`, customers);
-        // שמור גיבוי ב-Local Storage
-        saveCustomersToLocalStorage();
-        // טען מחדש את הלקוחות לאחר שמירה
-        await loadCustomers();
-    } catch (e) {
-        console.error(`Attempt ${attempt}/${maxAttempts} - Error saving customers to Firestore:`, e);
-        if (attempt < maxAttempts) {
-            console.log(`Retrying saveCustomers (attempt ${attempt + 1}/${maxAttempts})...`);
-            await saveCustomers(attempt + 1, maxAttempts);
-        } else {
-            console.error('Max attempts reached. Saving to local backup...');
-            alert('Error saving data to Firestore after multiple attempts: ' + e.message + '. Data saved locally as backup.');
-            // שמור גיבוי ב-Local Storage גם אם Firestore נכשל
-            saveCustomersToLocalStorage();
-        }
+        alert('Error saving data: ' + e.message);
     }
 }
 
@@ -396,75 +320,74 @@ function renderExpenses() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
+// טעינה ראשונית של הלקוחות
+loadCustomers(); // טען את הלקוחות מ-Local Storage כאשר הקובץ נטען
+
+document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded event triggered for path:', window.location.pathname);
-    // טעינת לקוחות מ-Firestore בכל דף
-    await loadCustomers().then(() => {
-        console.log('Customers loaded successfully, proceeding to render...');
-        // עדכון Dashboard ו-Customers לאחר טעינה
-        if (window.location.pathname.includes('dashboard.html')) {
-            updateDashboardStats();
-        }
-        if (window.location.pathname.includes('customers.html')) {
-            renderCustomers();
-        }
-        if (window.location.pathname.includes('customer.html')) {
-            renderCustomerDetails();
+    // עדכון Dashboard ו-Customers לאחר טעינה
+    if (window.location.pathname.includes('dashboard.html')) {
+        updateDashboardStats();
+    }
+    if (window.location.pathname.includes('customers.html')) {
+        renderCustomers();
+    }
+    if (window.location.pathname.includes('customer.html')) {
+        renderCustomerDetails();
 
-            // ניהול כפתור העריכה והמחיקה
-            const editBtn = document.getElementById('editBtn');
-            const deleteBtn = document.getElementById('deleteBtn');
-            if (editBtn && deleteBtn) {
-                editBtn.addEventListener('click', async () => {
-                    isEditing = !isEditing;
-                    if (isEditing) {
-                        editBtn.textContent = 'Save';
-                        editBtn.id = 'saveBtn';
-                        deleteBtn.style.display = 'block';
-                    } else {
-                        // שמירת השינויים
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const customerId = urlParams.get('id');
-                        const updatedCustomer = {
-                            id: customers[customerId].id, // שמר את ה-ID הקיים
-                            name: document.getElementById('editName').value,
-                            address: document.getElementById('editAddress').value,
-                            phone: document.getElementById('editPhone').value,
-                            age: document.getElementById('editAge').value,
-                            contractDate: document.getElementById('editContractDate').value,
-                            projectType: Array.from(document.getElementById('editProjectType').selectedOptions).map(option => option.value),
-                            projectPrice: document.getElementById('editProjectPrice').value,
-                            projectExpenses: document.getElementById('editProjectExpenses').value,
-                            paymentMethod: document.getElementById('editPaymentMethod').value,
-                            leadCost: document.getElementById('editLeadCost').value,
-                            dealerFee: document.getElementById('editDealerFee').value,
-                            bank: Array.from(document.getElementById('editBank').selectedOptions).map(option => option.value),
-                            terms: document.getElementById('editTerms').value,
-                            maxApproved: document.getElementById('editMaxApproved').value,
-                            moneyUsed: document.getElementById('editMoneyUsed').value,
-                            status: document.getElementById('editStatus').value
-                        };
-                        customers[customerId] = updatedCustomer;
-                        await saveCustomers();
-                        editBtn.textContent = 'Edit';
-                        editBtn.id = 'editBtn';
-                        deleteBtn.style.display = 'none';
-                    }
-                    renderCustomerDetails();
-                });
+        // ניהול כפתור העריכה והמחיקה
+        const editBtn = document.getElementById('editBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        if (editBtn && deleteBtn) {
+            editBtn.addEventListener('click', () => {
+                isEditing = !isEditing;
+                if (isEditing) {
+                    editBtn.textContent = 'Save';
+                    editBtn.id = 'saveBtn';
+                    deleteBtn.style.display = 'block';
+                } else {
+                    // שמירת השינויים
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const customerId = urlParams.get('id');
+                    const updatedCustomer = {
+                        id: customers[customerId].id, // שמר את ה-ID הקיים
+                        name: document.getElementById('editName').value,
+                        address: document.getElementById('editAddress').value,
+                        phone: document.getElementById('editPhone').value,
+                        age: document.getElementById('editAge').value,
+                        contractDate: document.getElementById('editContractDate').value,
+                        projectType: Array.from(document.getElementById('editProjectType').selectedOptions).map(option => option.value),
+                        projectPrice: document.getElementById('editProjectPrice').value,
+                        projectExpenses: document.getElementById('editProjectExpenses').value,
+                        paymentMethod: document.getElementById('editPaymentMethod').value,
+                        leadCost: document.getElementById('editLeadCost').value,
+                        dealerFee: document.getElementById('editDealerFee').value,
+                        bank: Array.from(document.getElementById('editBank').selectedOptions).map(option => option.value),
+                        terms: document.getElementById('editTerms').value,
+                        maxApproved: document.getElementById('editMaxApproved').value,
+                        moneyUsed: document.getElementById('editMoneyUsed').value,
+                        status: document.getElementById('editStatus').value
+                    };
+                    customers[customerId] = updatedCustomer;
+                    saveCustomers();
+                    editBtn.textContent = 'Edit';
+                    editBtn.id = 'editBtn';
+                    deleteBtn.style.display = 'none';
+                }
+                renderCustomerDetails();
+            });
 
-                deleteBtn.addEventListener('click', async () => {
-                    if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const customerId = urlParams.get('id');
-                        customers.splice(customerId, 1);
-                        await saveCustomers();
-                        window.location.href = 'customers.html';
-                    }
-                });
-            }
+            deleteBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const customerId = urlParams.get('id');
+                    customers.splice(customerId, 1);
+                    saveCustomers();
+                    window.location.href = 'customers.html';
+                }
+            });
         }
-    });
+    }
 
     // עדכון תגיות הפרויקטים
     const projectTypeSelect = document.getElementById('projectType');
@@ -497,12 +420,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (validUsers[username] && validUsers[username] === password) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('currentUser', username);
-                loadCustomers().then(() => {
-                    window.location.href = 'dashboard.html';
-                }).catch(error => {
-                    console.error('Error loading customers:', error);
-                    alert('Error loading data. Please try again.');
-                });
+                loadCustomers();
+                window.location.href = 'dashboard.html';
             } else {
                 document.getElementById('loginMessage').style.display = 'block';
                 document.getElementById('loginMessage').textContent = 'Invalid username or password';
@@ -530,7 +449,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // ניהול טופס הוספת לקוח
     const addCustomerForm = document.getElementById('addCustomerForm');
     if (addCustomerForm) {
-        addCustomerForm.addEventListener('submit', async function(event) {
+        addCustomerForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
             const projectTypeSelect = document.getElementById('projectType');
@@ -576,7 +495,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             };
 
             customers.push(newCustomer);
-            await saveCustomers();
+            saveCustomers();
             window.location.href = 'customers.html';
         });
 

@@ -7,11 +7,9 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
-    <div class="customer-container">
+    <div class="customer-details-container">
         <header>
             <h1>Customer Details</h1>
             <nav>
@@ -21,20 +19,11 @@
                 <a href="#" id="logoutBtn">Log Out</a>
             </nav>
         </header>
-        <main>
-            <div id="customerDetails" class="customer-details">
-                <!-- פרטי הלקוח יתווספו כאן דרך JavaScript -->
-            </div>
-            <button id="editBtn" class="btn-primary">Edit</button>
-            <button id="deleteBtn" class="btn-danger" style="display: none;"><i class="fas fa-trash-alt"></i> Delete Customer</button>
-            <div class="action-menu">
-                <button id="actionBtn" class="action-btn"><i class="fas fa-plus"></i></button>
-                <div id="actionMenu" class="action-menu-content">
-                    <button onclick="alert('Upsell functionality coming soon!')">Upsell</button>
-                    <button onclick="alert('Add Homeowner functionality coming soon!')">Add Homeowner</button>
-                </div>
-            </div>
-        </main>
+        <div class="action-buttons">
+            <button class="btn-primary" id="editBtn">Edit</button>
+            <button class="btn-danger" id="deleteBtn">Delete</button>
+        </div>
+        <div id="customerDetails"></div>
     </div>
     <script src="script.js"></script>
 </body>

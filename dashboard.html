@@ -7,8 +7,6 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -20,25 +18,20 @@
                 <a href="#" id="logoutBtn">Log Out</a>
             </nav>
         </header>
-        <main>
-            <div class="stats-cards">
-                <div class="card">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Total Sales</h3>
-                    <p class="value sales">$0</p>
-                </div>
-                <div class="card">
-                    <i class="fas fa-tasks"></i>
-                    <h3>Total Projects</h3>
-                    <p class="value projects">0</p>
-                </div>
-                <div class="card">
-                    <i class="fas fa-dollar-sign"></i>
-                    <h3>Total Commission</h3>
-                    <p class="value commission">$0</p>
-                </div>
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Sales</h3>
+                <p class="value sales">$0</p>
             </div>
-        </main>
+            <div class="stat-card">
+                <h3>Total Projects</h3>
+                <p class="value projects">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Commission</h3>
+                <p class="value commission">$0</p>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
