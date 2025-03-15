@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Details - Energy Efficient Sales</title>
+    <title>Customers - Energy Efficient Sales</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,23 +26,21 @@
         const db = getFirestore(app);
         window.firebaseApp = app;
         window.firestoreDb = db;
-        console.log('Firebase initialized successfully in customer.html');
+        console.log('Firebase initialized successfully in customers.html');
     </script>
 </head>
 <body>
-    <div class="customer-details-container">
+    <div class="customers-container">
         <header>
-            <h1>Customer Details</h1>
+            <h1>Customers</h1>
             <nav>
                 <a href="dashboard.html">Dashboard</a>
-                <a href="customers.html">Customers</a>
                 <a href="money-reports.html">Money Reports</a>
                 <a href="#" id="logoutBtn">Log Out</a>
             </nav>
         </header>
-        <button id="editBtn" class="btn-primary">Edit</button>
-        <button id="deleteBtn" class="btn-danger" style="display: none;">Delete</button>
-        <div id="customerDetails"></div>
+        <button class="btn-primary" id="addCustomerBtn">Add New Customer</button>
+        <div id="customersList" class="customer-cards"></div>
     </div>
     <script src="script.js"></script>
 </body>
