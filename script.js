@@ -320,11 +320,10 @@ function renderExpenses() {
     }
 }
 
-// טעינה ראשונית של הלקוחות
-loadCustomers(); // טען את הלקוחות מ-Local Storage כאשר הקובץ נטען
-
+// טעינה ראשונית של הלקוחות עם התחברות
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded event triggered for path:', window.location.pathname);
+    loadCustomers(); // טען את הלקוחות מ-Local Storage כאשר הדף נטען
     // עדכון Dashboard ו-Customers לאחר טעינה
     if (window.location.pathname.includes('dashboard.html')) {
         updateDashboardStats();
