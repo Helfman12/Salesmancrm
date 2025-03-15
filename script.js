@@ -13,10 +13,13 @@ let expenses = []; // מערך זמני לשמירת ההוצאות
 
 // טעינת לקוחות מ-Firestore וסנכרון עם Local Storage
 async function loadCustomers() {
+    // המתנה עד שה-db מאותחל
+    while (!db) {
+        console.log('Waiting for Firestore database to initialize...');
+        await new Promise(resolve => setTimeout(resolve, 100)); // המתנה של 100ms
+    }
+
     try {
-        if (!db) {
-            throw new Error('Firestore database not initialized');
-        }
         // נסה לטעון מ-Firestore
         const customersRef = db.collection('customers');
         const snapshot = await customersRef.get();
@@ -47,9 +50,12 @@ async function loadCustomers() {
 // שמירת לקוחות ב-Local Storage ו-Firestore
 async function saveCustomers(customersToSave) {
     try {
-        if (!db) {
-            throw new Error('Firestore database not initialized');
+        // המתנה עד שה-db מאותחל
+        while (!db) {
+            console.log('Waiting for Firestore database to initialize for saving...');
+            await new Promise(resolve => setTimeout(resolve, 100)); // המתנה של 100ms
         }
+
         // שמור ב-Local Storage
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customersToSave));
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
