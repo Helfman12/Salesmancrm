@@ -57,8 +57,8 @@ function saveCustomersToLocalStorage() {
     }
 }
 
-// טעינת לקוחות מ-Firestore
-async function loadCustomers() {
+// טעינת לקוחות מ-Firestore עם ניסיון חוזר
+async function loadCustomers(attempt = 1, maxAttempts = 3) {
     try {
         const snapshot = await db.collection(`customers_${currentUser}`).get();
         customers = [];
@@ -70,15 +70,20 @@ async function loadCustomers() {
         saveCustomersToLocalStorage();
         return customers;
     } catch (e) {
-        console.error('Error loading customers from Firestore:', e);
-        alert('Error loading customer data from Firestore: ' + e.message + '. Loading from local backup...');
-        // טען מ-Local Storage אם Firestore נכשל
-        return loadCustomersFromLocalStorage();
+        console.error(`Attempt ${attempt}/${maxAttempts} - Error loading customers from Firestore:`, e);
+        if (attempt < maxAttempts) {
+            console.log(`Retrying loadCustomers (attempt ${attempt + 1}/${maxAttempts})...`);
+            return await loadCustomers(attempt + 1, maxAttempts);
+        } else {
+            console.error('Max attempts reached. Loading from local backup...');
+            alert('Error loading customer data from Firestore after multiple attempts: ' + e.message + '. Loading from local backup...');
+            return loadCustomersFromLocalStorage();
+        }
     }
 }
 
-// שמירת לקוחות ב-Firestore
-async function saveCustomers() {
+// שמירת לקוחות ב-Firestore עם ניסיון חוזר
+async function saveCustomers(attempt = 1, maxAttempts = 3) {
     try {
         const batch = db.batch();
         for (const customer of customers) {
@@ -95,10 +100,16 @@ async function saveCustomers() {
         // טען מחדש את הלקוחות לאחר שמירה
         await loadCustomers();
     } catch (e) {
-        console.error('Error saving customers to Firestore:', e);
-        alert('Error saving data to Firestore: ' + e.message + '. Data saved locally as backup.');
-        // שמור גיבוי ב-Local Storage גם אם Firestore נכשל
-        saveCustomersToLocalStorage();
+        console.error(`Attempt ${attempt}/${maxAttempts} - Error saving customers to Firestore:`, e);
+        if (attempt < maxAttempts) {
+            console.log(`Retrying saveCustomers (attempt ${attempt + 1}/${maxAttempts})...`);
+            await saveCustomers(attempt + 1, maxAttempts);
+        } else {
+            console.error('Max attempts reached. Saving to local backup...');
+            alert('Error saving data to Firestore after multiple attempts: ' + e.message + '. Data saved locally as backup.');
+            // שמור גיבוי ב-Local Storage גם אם Firestore נכשל
+            saveCustomersToLocalStorage();
+        }
     }
 }
 
@@ -138,6 +149,8 @@ function updateDashboardStats() {
         console.log(`Updated Dashboard: Total Sales: $${totalSales}, Total Projects: ${totalProjects}, Total Commission: $${totalCommission}`);
     } else {
         console.error('Dashboard elements not found:', { totalSalesElement, totalProjectsElement, totalCommissionElement });
+        // נסה שוב לאחר 100ms
+        setTimeout(updateDashboardStats, 100);
     }
 }
 
