@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Customer - Energy Efficient Sales</title>
+    <title>Add Customer - Energy Efficient Sales</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
@@ -25,9 +26,13 @@
         const db = getFirestore(app);
         window.firebaseApp = app;
         window.firestoreDb = db;
-        console.log('Firebase initialized successfully in customer.html');
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.writeBatch = writeBatch;
+        console.log('Firebase initialized successfully in add-customer.html with Firestore functions');
     </script>
-</head>   
+</head>
 <body>
     <div class="add-customer-container">
         <header>
@@ -39,8 +44,9 @@
                 <a href="#" id="logoutBtn">Log Out</a>
             </nav>
         </header>
-        <main>
-            <form id="addCustomerForm">
+        <form id="addCustomerForm">
+            <div class="section">
+                <h3><i class="fas fa-user"></i> Customer Information</h3>
                 <div class="input-group">
                     <label for="customerName">Customer Name:</label>
                     <input type="text" id="customerName" name="customerName" required>
@@ -51,7 +57,7 @@
                 </div>
                 <div class="input-group">
                     <label for="phone">Phone Number:</label>
-                    <input type="tel" id="phone" name="phone" placeholder="1234567890" required>
+                    <input type="tel" id="phone" name="phone" required>
                 </div>
                 <div class="input-group">
                     <label for="age">Age:</label>
@@ -61,6 +67,9 @@
                     <label for="contractDate">Contract Date:</label>
                     <input type="date" id="contractDate" name="contractDate" required>
                 </div>
+            </div>
+            <div class="section">
+                <h3><i class="fas fa-tools"></i> Project Details</h3>
                 <div class="input-group">
                     <label for="projectType">Project Type:</label>
                     <select id="projectType" name="projectType" multiple required>
@@ -83,36 +92,21 @@
                         <option value="Rewire">Rewire</option>
                         <option value="Repipe">Repipe</option>
                     </select>
+                    <div id="selectedProjects"></div>
                 </div>
                 <div class="input-group">
-                    <label>Selected Projects:</label>
-                    <div id="selectedProjects" class="selected-projects"></div>
-                </div>
-                <div class="input-group">
-                    <label for="projectPrice">Project Total Price ($):</label>
+                    <label for="projectPrice">Project Price ($):</label>
                     <input type="number" id="projectPrice" name="projectPrice" min="0" step="0.01" required>
                 </div>
                 <div class="input-group">
                     <label for="projectExpenses">Project Expenses ($):</label>
-                    <div class="expense-input-group">
-                        <input type="number" id="projectExpenses" name="projectExpenses" min="0" step="0.01" readonly required>
-                        <button type="button" id="addExpenseBtn" class="add-expense-btn"><i class="fas fa-plus"></i></button>
-                    </div>
-                    <div id="expenseList" class="expense-list"></div>
+                    <input type="number" id="projectExpenses" name="projectExpenses" min="0" step="0.01" value="0" readonly>
+                    <button type="button" id="addExpenseBtn" class="btn-secondary">Add Expense</button>
+                    <div id="expenseList"></div>
                 </div>
-                <div class="input-group">
-                    <label>Payment Method:</label>
-                    <div class="radio-group">
-                        <input type="radio" id="paymentCash" name="paymentMethod" value="Cash" required>
-                        <label for="paymentCash" class="radio-btn">
-                            <i class="fas fa-money-bill-wave"></i> Cash
-                        </label>
-                        <input type="radio" id="paymentFinance" name="paymentMethod" value="Finance">
-                        <label for="paymentFinance" class="radio-btn">
-                            <i class="fas fa-credit-card"></i> Finance
-                        </label>
-                    </div>
-                </div>
+            </div>
+            <div class="section">
+                <h3><i class="fas fa-chart-pie"></i> Financial Details</h3>
                 <div class="input-group">
                     <label for="leadCost">Lead Cost (%):</label>
                     <input type="number" id="leadCost" name="leadCost" min="0" max="100" step="0.1" required>
@@ -130,33 +124,11 @@
                         <option value="Slice">Slice</option>
                         <option value="Mosaic">Mosaic</option>
                     </select>
-                    <div id="selectedBanks" class="selected-banks"></div>
+                    <div id="selectedBanks"></div>
                 </div>
                 <div class="input-group">
                     <label for="terms">Terms:</label>
-                    <select id="terms" name="terms" required>
-                        <option value="">Select Terms</option>
-                        <option value="5 years 12.99%">5 years 12.99%</option>
-                        <option value="7 years 12.99%">7 years 12.99%</option>
-                        <option value="10 years 12.99%">10 years 12.99%</option>
-                        <option value="12 years 12.99%">12 years 12.99%</option>
-                        <option value="15 years 12.99%">15 years 12.99%</option>
-                        <option value="5 years 11.99%">5 years 11.99%</option>
-                        <option value="7 years 11.99%">7 years 11.99%</option>
-                        <option value="10 years 11.99%">10 years 11.99%</option>
-                        <option value="12 years 11.99%">12 years 11.99%</option>
-                        <option value="15 years 11.99%">15 years 11.99%</option>
-                        <option value="5 years 10.99%">5 years 10.99%</option>
-                        <option value="7 years 10.99%">7 years 10.99%</option>
-                        <option value="10 years 10.99%">10 years 10.99%</option>
-                        <option value="12 years 10.99%">12 years 10.99%</option>
-                        <option value="15 years 10.99%">15 years 10.99%</option>
-                        <option value="5 years 9.99%">5 years 9.99%</option>
-                        <option value="7 years 9.99%">7 years 9.99%</option>
-                        <option value="10 years 9.99%">10 years 9.99%</option>
-                        <option value="12 years 9.99%">12 years 9.99%</option>
-                        <option value="15 years 9.99%">15 years 9.99%</option>
-                    </select>
+                    <input type="text" id="terms" name="terms" required>
                 </div>
                 <div class="input-group">
                     <label for="maxApproved">Max Approved ($):</label>
@@ -164,7 +136,14 @@
                 </div>
                 <div class="input-group">
                     <label for="moneyUsed">Money Used ($):</label>
-                    <input type="number" id="moneyUsed" name="moneyUsed" min="0" step="0.01" readonly required>
+                    <input type="number" id="moneyUsed" name="moneyUsed" min="0" step="0.01" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Payment Method:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="paymentMethod" value="Cash" required> Cash</label>
+                        <label><input type="radio" name="paymentMethod" value="Finance"> Finance</label>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="status">Project Status:</label>
@@ -175,9 +154,9 @@
                         <option value="Cancelled">Cancelled</option>
                     </select>
                 </div>
-                <button type="submit">Add Customer</button>
-            </form>
-        </main>
+            </div>
+            <button type="submit" class="btn-primary">Add Customer</button>
+        </form>
     </div>
     <script src="script.js"></script>
 </body>

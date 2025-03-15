@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('Attempting to render customers in Customers page with data:', customers);
             renderCustomers(customers);
         }
-        if (window.location.pathname.includes('customer.html')) {
+        if (window.location.pathname.includes('customer.html')) { // הקריאה הזו תתבצע רק ב-customer.html
             console.log('Attempting to render customer details in Customer page with data:', customers);
             renderCustomerDetails(customers);
 
