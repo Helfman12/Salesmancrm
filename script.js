@@ -1,31 +1,36 @@
 // המתנה לטעינת Firebase
 function initializeFirebase() {
-    if (typeof firebase === 'undefined') {
-        console.error('Firebase is not loaded yet. Retrying in 100ms...');
-        setTimeout(initializeFirebase, 100);
-        return;
-    }
+    return new Promise((resolve, reject) => {
+        if (typeof firebase === 'undefined') {
+            console.error('Firebase is not loaded yet. Retrying in 100ms...');
+            setTimeout(() => {
+                initializeFirebase().then(resolve).catch(reject);
+            }, 100);
+            return;
+        }
 
-    // הגדרות Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
-        authDomain: "constructionsalesinterface.firebaseapp.com",
-        projectId: "constructionsalesinterface",
-        storageBucket: "constructionsalesinterface.appspot.com",
-        messagingSenderId: "938357842695",
-        appId: "1:938357842695:web:03ac6e8646528896b78582",
-        measurementId: "G-4D1H3P382N"
-    };
+        // הגדרות Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
+            authDomain: "constructionsalesinterface.firebaseapp.com",
+            projectId: "constructionsalesinterface",
+            storageBucket: "constructionsalesinterface.appspot.com",
+            messagingSenderId: "938357842695",
+            appId: "1:938357842695:web:03ac6e8646528896b78582",
+            measurementId: "G-4D1H3P382N"
+        };
 
-    // איניציאליזציה של Firebase
-    try {
-        firebase.initializeApp(firebaseConfig);
-        console.log('Firebase initialized successfully');
-    } catch (error) {
-        console.error('Detailed Firebase initialization error:', error);
-        alert('Error initializing Firebase: ' + error.message);
-    }
-    const db = firebase.firestore();
+        // איניציאליזציה של Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log('Firebase initialized successfully');
+            const db = firebase.firestore();
+            resolve(db);
+        } catch (error) {
+            console.error('Detailed Firebase initialization error:', error);
+            reject(error);
+        }
+    });
 }
 
 // בדיקת התחברות בעת טעינת הדפים
@@ -37,27 +42,61 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
 let customers = []; // מערך גלובלי של לקוחות
 let isEditing = false;
 let expenses = []; // מערך זמני לשמירת ההוצאות
+let db; // משתנה גלובלי עבור Firestore
 
-// טעינת לקוחות מ-Local Storage
-function loadCustomers() {
-    const storedCustomers = localStorage.getItem(`customers_${currentUser}`);
-    if (storedCustomers) {
-        customers = JSON.parse(storedCustomers);
-        console.log(`Loaded ${customers.length} customers from Local Storage for ${currentUser}:`, customers);
-    } else {
+// טעינת לקוחות מ-Firestore וסנכרון עם Local Storage
+async function loadCustomers() {
+    try {
+        if (!db) {
+            db = await initializeFirebase();
+        }
+        console.log('Attempting to load customers from Firestore...');
+        const customersRef = db.collection('customers');
+        const snapshot = await customersRef.get();
         customers = [];
-        console.log(`No customers found in Local Storage for ${currentUser}`);
+        snapshot.forEach(doc => {
+            customers.push({ id: doc.id, ...doc.data() });
+        });
+        console.log(`Loaded ${customers.length} customers from Firestore:`, customers);
+
+        // סנכרן עם Local Storage
+        localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
+        console.log(`Synced ${customers.length} customers to Local Storage for ${currentUser}`);
+    } catch (error) {
+        console.error('Error loading customers from Firestore:', error);
+        // אם יש שגיאה ב-Firestore, טען מ-Local Storage
+        const storedCustomers = localStorage.getItem(`customers_${currentUser}`);
+        if (storedCustomers) {
+            customers = JSON.parse(storedCustomers);
+            console.log(`Loaded ${customers.length} customers from Local Storage for ${currentUser}:`, customers);
+        } else {
+            customers = [];
+            console.log(`No customers found in Local Storage for ${currentUser}`);
+        }
     }
     return customers;
 }
 
-// שמירת לקוחות ב-Local Storage
-function saveCustomers(customersToSave) {
+// שמירת לקוחות ב-Local Storage ו-Firestore
+async function saveCustomers(customersToSave) {
     try {
+        if (!db) {
+            db = await initializeFirebase();
+        }
+        // שמור ב-Local Storage
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customersToSave));
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
+
+        // סנכרן עם Firestore
+        const batch = db.batch();
+        customersToSave.forEach(customer => {
+            const customerRef = db.collection('customers').doc(customer.id);
+            batch.set(customerRef, customer);
+        });
+        await batch.commit();
+        console.log(`Synced ${customersToSave.length} customers to Firestore`);
     } catch (e) {
-        console.error('Error saving customers to Local Storage:', e);
+        console.error('Error saving customers:', e);
         alert('Error saving data: ' + e.message);
     }
 }
@@ -350,10 +389,11 @@ function renderExpenses() {
 }
 
 // טעינה ראשונית של הלקוחות עם התחברות
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('DOMContentLoaded event triggered for path:', window.location.pathname);
-    initializeFirebase(); // אתחל את Firebase
-    customers = loadCustomers(); // טען את הלקוחות מ-Local Storage כאשר הדף נטען
+    
+    // טען את הלקוחות מ-Firestore
+    await loadCustomers();
 
     // עדכון Dashboard ו-Customers לאחר טעינה
     if (window.location.pathname.includes('dashboard.html')) {
@@ -437,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ניהול Log In
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        loginForm.addEventListener('submit', function(event) {
+        loginForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const username = document.getElementById('username').value;
@@ -451,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (validUsers[username] && validUsers[username] === password) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('currentUser', username);
-                customers = loadCustomers(); // טען את הלקוחות מיד לאחר התחברות
+                await loadCustomers(); // טען את הלקוחות מיד לאחר התחברות
                 window.location.href = 'dashboard.html';
             } else {
                 document.getElementById('loginMessage').style.display = 'block';
@@ -480,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ניהול טופס הוספת לקוח
     const addCustomerForm = document.getElementById('addCustomerForm');
     if (addCustomerForm) {
-        addCustomerForm.addEventListener('submit', function(event) {
+        addCustomerForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const projectTypeSelect = document.getElementById('projectType');
@@ -506,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const newCustomer = {
-                id: generateUniqueId(), // הוסף מזהה ייחודי
+                id: generateUniqueId(),
                 name: document.getElementById('customerName').value,
                 address: document.getElementById('address').value,
                 phone: document.getElementById('phone').value,
@@ -526,7 +566,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             customers.push(newCustomer);
-            saveCustomers(customers);
+            await saveCustomers(customers);
             window.location.href = 'customers.html';
         });
 
