@@ -16,6 +16,9 @@ async function loadCustomers() {
             throw new Error('Firestore database not initialized in window');
         }
         db = window.firestoreDb; // השתמש ב-window.firestoreDb שהוגדר ב-HTML
+        if (typeof window.collection !== 'function' || typeof window.getDocs !== 'function') {
+            throw new Error('Firestore functions (collection, getDocs) are not defined in window');
+        }
         console.log('Attempting to load customers from Firestore...');
         const customersRef = window.collection(db, 'customers'); // השתמש ב-window.collection
         const snapshot = await window.getDocs(customersRef);     // השתמש ב-window.getDocs
@@ -50,6 +53,9 @@ async function saveCustomers(customersToSave) {
             throw new Error('Firestore database not initialized in window');
         }
         db = window.firestoreDb; // השתמש ב-window.firestoreDb שהוגדר ב-HTML
+        if (typeof window.writeBatch !== 'function' || typeof window.doc !== 'function') {
+            throw new Error('Firestore functions (writeBatch, doc) are not defined in window');
+        }
         // שמור ב-Local Storage
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customersToSave));
         console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
