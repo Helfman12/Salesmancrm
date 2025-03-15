@@ -8,7 +8,7 @@ const firebaseConfig = {
     appId: "1:938358742695:web:03ac6e8646528896b78582",
     measurementId: "G-4D1H3P382N"
   };
-  
+
 // איניציאליזציה של Firebase
 try {
     firebase.initializeApp(firebaseConfig);
@@ -100,7 +100,7 @@ function renderCustomers(customers) {
     const container = document.getElementById('customersList');
     if (!container) {
         console.error('Customers container (customersList) not found in the DOM. Retrying in 100ms...');
-        setTimeout(() => renderCustomers(customers), 100);
+        setTimeout(() => renderCustomers(customers), 100); // נסה שוב לאחר 100ms
         return;
     }
 
@@ -177,7 +177,7 @@ function renderCustomerDetails(customers) {
     const deleteBtn = document.getElementById('deleteBtn');
     if (!container || !deleteBtn) {
         console.error('Customer details container or delete button not found. Retrying in 100ms...');
-        setTimeout(() => renderCustomerDetails(customers), 100);
+        setTimeout(() => renderCustomerDetails(customers), 100); // נסה שוב לאחר 100ms
         return;
     }
 
@@ -340,11 +340,13 @@ function renderExpenses() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded event triggered for path:', window.location.pathname);
     const customers = loadCustomers(); // טען את הלקוחות מ-Local Storage כאשר הדף נטען
+
     // עדכון Dashboard ו-Customers לאחר טעינה
     if (window.location.pathname.includes('dashboard.html')) {
         updateDashboardStats(customers);
     }
     if (window.location.pathname.includes('customers.html')) {
+        console.log('Attempting to render customers in Customers page...');
         renderCustomers(customers);
     }
     if (window.location.pathname.includes('customer.html')) {
