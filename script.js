@@ -27,27 +27,30 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
 
 // אובייקט גלובלי לשמירת מצב
 const appState = {
-    customers: []
+    customers: JSON.parse(sessionStorage.getItem(`customers_${currentUser}`)) || []
 };
 
-// טעינת לקוחות מ-Local Storage עם שמירה ב-appState
+// טעינת לקוחות מ-Local Storage עם עדכון ב-sessionStorage
 function loadCustomers() {
     const storedCustomers = localStorage.getItem(`customers_${currentUser}`);
     if (storedCustomers) {
         appState.customers = JSON.parse(storedCustomers);
+        sessionStorage.setItem(`customers_${currentUser}`, JSON.stringify(appState.customers));
         console.log(`Loaded ${appState.customers.length} customers from Local Storage for ${currentUser}:`, appState.customers);
     } else {
         appState.customers = [];
+        sessionStorage.setItem(`customers_${currentUser}`, JSON.stringify(appState.customers));
         console.log(`No customers found in Local Storage for ${currentUser}`);
     }
     return appState.customers;
 }
 
-// שמירת לקוחות ב-Local Storage
+// שמירת לקוחות ב-Local Storage ו-sessionStorage
 function saveCustomers() {
     try {
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(appState.customers));
-        console.log(`Saved ${appState.customers.length} customers to Local Storage for ${currentUser}:`, appState.customers);
+        sessionStorage.setItem(`customers_${currentUser}`, JSON.stringify(appState.customers));
+        console.log(`Saved ${appState.customers.length} customers to Local Storage and sessionStorage for ${currentUser}:`, appState.customers);
     } catch (e) {
         console.error('Error saving customers to Local Storage:', e);
         alert('Error saving data: ' + e.message);
@@ -140,6 +143,7 @@ function renderCustomers() {
 function logout() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('isLoggedIn');
+    sessionStorage.removeItem(`customers_${currentUser}`);
     window.location.href = 'index.html';
 }
 
