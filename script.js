@@ -9,7 +9,7 @@ let isEditing = false;
 let expenses = []; // מערך זמני לשמירת ההוצאות
 let db; // משתנה גלובלי עבור Firestore
 
-// טעינת לקוחות מ-Firestore וסנכרון עם Local Storage
+// טעינת לקוחות מ-Firestore
 async function loadCustomers() {
     try {
         if (!window.firestoreDb) {
@@ -20,33 +20,21 @@ async function loadCustomers() {
             throw new Error('Firestore functions (collection, getDocs) are not defined in window');
         }
         console.log('Attempting to load customers from Firestore...');
-        const customersRef = window.collection(db, 'customers'); // השתמש ב-window.collection
-        const snapshot = await window.getDocs(customersRef);     // השתמש ב-window.getDocs
+        const customersRef = window.collection(db, 'customers');
+        const snapshot = await window.getDocs(customersRef);
         customers = [];
         snapshot.forEach(doc => {
             customers.push({ id: doc.id, ...doc.data() });
         });
         console.log(`Loaded ${customers.length} customers from Firestore:`, customers);
-
-        // סנכרן עם Local Storage
-        localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customers));
-        console.log(`Synced ${customers.length} customers to Local Storage for ${currentUser}`);
     } catch (error) {
         console.error('Error loading customers from Firestore:', error);
-        // אם יש שגיאה ב-Firestore, טען מ-Local Storage
-        const storedCustomers = localStorage.getItem(`customers_${currentUser}`);
-        if (storedCustomers) {
-            customers = JSON.parse(storedCustomers);
-            console.log(`Loaded ${customers.length} customers from Local Storage for ${currentUser}:`, customers);
-        } else {
-            customers = [];
-            console.log(`No customers found in Local Storage for ${currentUser}`);
-        }
+        customers = []; // אם יש שגיאה, נחזיר מערך ריק
     }
     return customers;
 }
 
-// שמירת לקוחות ב-Local Storage ו-Firestore
+// שמירת לקוחות ב-Firestore בלבד
 async function saveCustomers(customersToSave) {
     try {
         if (!window.firestoreDb) {
@@ -56,20 +44,16 @@ async function saveCustomers(customersToSave) {
         if (typeof window.writeBatch !== 'function' || typeof window.doc !== 'function') {
             throw new Error('Firestore functions (writeBatch, doc) are not defined in window');
         }
-        // שמור ב-Local Storage
-        localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customersToSave));
-        console.log(`Saved ${customersToSave.length} customers to Local Storage for ${currentUser}:`, customersToSave);
-
-        // סנכרן עם Firestore
-        const batch = window.writeBatch(db); // השתמש ב-window.writeBatch
+        console.log(`Saving ${customersToSave.length} customers to Firestore...`);
+        const batch = window.writeBatch(db);
         customersToSave.forEach(customer => {
-            const customerRef = window.doc(db, 'customers', customer.id); // השתמש ב-window.doc
+            const customerRef = window.doc(db, 'customers', customer.id);
             batch.set(customerRef, customer);
         });
         await batch.commit();
         console.log(`Synced ${customersToSave.length} customers to Firestore`);
     } catch (e) {
-        console.error('Error saving customers:', e);
+        console.error('Error saving customers to Firestore:', e);
         alert('Error saving data: ' + e.message);
     }
 }
@@ -129,7 +113,7 @@ function renderCustomers(customers) {
         return;
     }
 
-    container.innerHTML = '';
+    container.innerHTML = ''; // נקה את התוכן הקיים
     if (customers.length === 0) {
         container.innerHTML = '<p>No customers found.</p>';
         console.log('No customers to display');
@@ -377,6 +361,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderCustomers(customers);
     }
     if (window.location.pathname.includes('customer.html')) {
+        console.log('Attempting to render customer details in Customer page with data:', customers);
         renderCustomerDetails(customers);
 
         // ניהול כפתור העריכה והמחיקה
