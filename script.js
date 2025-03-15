@@ -145,34 +145,37 @@ function updateDashboardStats() {
 function renderCustomers() {
     console.log('Rendering customers:', customers);
     const container = document.getElementById('customersList');
-    if (container) {
-        container.innerHTML = '';
-        if (customers.length === 0) {
-            container.innerHTML = '<p>No customers found.</p>';
-            console.log('No customers to display');
-            return;
-        }
-        customers.forEach((customer, index) => {
-            const commission = calculateCommission(customer);
-            const card = document.createElement('div');
-            card.className = 'customer-card';
-            card.innerHTML = `
-                <h3>${customer.name}</h3>
-                <p><span>Project Type:</span> ${Array.isArray(customer.projectType) ? customer.projectType.join(', ') : customer.projectType}</p>
-                <p><span>Project Price:</span> $${addCommasToNumber(customer.projectPrice)}</p>
-                <p><span>Commission:</span> $<span class="commission-value">${addCommasToNumber(commission)}</span></p>
-                <p><span>Banks:</span> ${Array.isArray(customer.bank) ? customer.bank.join(', ') : customer.bank}</p>
-                <span class="status ${customer.status.toLowerCase().replace(' ', '-')}">${customer.status}</span>
-            `;
-            card.addEventListener('click', () => {
-                window.location.href = `customer.html?id=${index}`;
-            });
-            container.appendChild(card);
-        });
-        console.log(`Rendered ${customers.length} customers in Customers page`);
-    } else {
-        console.error('Customers container (customersList) not found in the DOM');
+    if (!container) {
+        console.error('Customers container (customersList) not found in the DOM. Retrying in 100ms...');
+        setTimeout(renderCustomers, 100); // נסה שוב לאחר 100ms
+        return;
     }
+
+    container.innerHTML = '';
+    if (customers.length === 0) {
+        container.innerHTML = '<p>No customers found.</p>';
+        console.log('No customers to display');
+        return;
+    }
+
+    customers.forEach((customer, index) => {
+        const commission = calculateCommission(customer);
+        const card = document.createElement('div');
+        card.className = 'customer-card';
+        card.innerHTML = `
+            <h3>${customer.name}</h3>
+            <p><span>Project Type:</span> ${Array.isArray(customer.projectType) ? customer.projectType.join(', ') : customer.projectType}</p>
+            <p><span>Project Price:</span> $${addCommasToNumber(customer.projectPrice)}</p>
+            <p><span>Commission:</span> $<span class="commission-value">${addCommasToNumber(commission)}</span></p>
+            <p><span>Banks:</span> ${Array.isArray(customer.bank) ? customer.bank.join(', ') : customer.bank}</p>
+            <span class="status ${customer.status.toLowerCase().replace(' ', '-')}">${customer.status}</span>
+        `;
+        card.addEventListener('click', () => {
+            window.location.href = `customer.html?id=${index}`;
+        });
+        container.appendChild(card);
+    });
+    console.log(`Rendered ${customers.length} customers in Customers page`);
 }
 
 // פונקציה להתנתקות
@@ -219,119 +222,121 @@ function renderCustomerDetails() {
     console.log('Rendering customer details with customers:', customers);
     const container = document.getElementById('customerDetails');
     const deleteBtn = document.getElementById('deleteBtn');
-    if (container && deleteBtn) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const customerId = urlParams.get('id');
-        const customer = customers[customerId];
+    if (!container || !deleteBtn) {
+        console.error('Customer details container or delete button not found. Retrying in 100ms...');
+        setTimeout(renderCustomerDetails, 100); // נסה שוב לאחר 100ms
+        return;
+    }
 
-        if (customer) {
-            const commission = calculateCommission(customer);
-            if (!isEditing) {
-                container.innerHTML = `
-                    <div class="header-section">
-                        <h2><i class="fas fa-user"></i> ${customer.name}</h2>
-                        <p><span>Contract Date:</span> ${customer.contractDate}</p>
-                        <span class="status ${customer.status.toLowerCase().replace(' ', '-')}">${customer.status}</span>
-                    </div>
-                    <div class="section contact-info">
-                        <h3><i class="fas fa-address-book"></i> Contact Information</h3>
-                        <p><i class="fas fa-map-marker-alt"></i> <span>Address:</span> ${customer.address}</p>
-                        <p><i class="fas fa-phone"></i> <span>Phone Number:</span> ${customer.phone}</p>
-                        <p><i class="fas fa-user"></i> <span>Age:</span> ${customer.age}</p>
-                    </div>
-                    <div class="section">
-                        <h3><i class="fas fa-tools"></i> Project Details</h3>
-                        <p><i class="fas fa-list"></i> <span>Project Type:</span> ${Array.isArray(customer.projectType) ? customer.projectType.join(', ') : customer.projectType}</p>
-                        <p><i class="fas fa-dollar-sign"></i> <span>Project Price:</span> $${addCommasToNumber(customer.projectPrice)}</p>
-                        <p><i class="fas fa-money-bill-wave"></i> <span>Project Expenses:</span> $${addCommasToNumber(customer.projectExpenses)}</p>
-                        <p><i class="fas fa-chart-line"></i> <span>Commission:</span> $<span class="commission-value">${addCommasToNumber(commission)}</span></p>
-                    </div>
-                    <div class="section financial-details">
-                        <h3><i class="fas fa-chart-pie"></i> Financial Details</h3>
-                        <p><i class="fas fa-percent"></i> <span>Lead Cost:</span> ${customer.leadCost}%</p>
-                        <p><i class="fas fa-percent"></i> <span>Dealer Fee:</span> ${customer.dealerFee}%</p>
-                        <p><i class="fas fa-university"></i> <span>Banks:</span> ${Array.isArray(customer.bank) ? customer.bank.join(', ') : customer.bank}</p>
-                        <p><i class="fas fa-file-alt"></i> <span>Terms:</span> ${customer.terms}</p>
-                        <p><i class="fas fa-check-circle"></i> <span>Max Approved:</span> $${addCommasToNumber(customer.maxApproved)}</p>
-                        <p><i class="fas fa-money-check"></i> <span>Money Used:</span> $${addCommasToNumber(customer.moneyUsed)}</p>
-                        <p><i class="fas fa-shield-alt"></i> <span>Payment Method:</span> ${customer.paymentMethod}</p>
-                    </div>
-                `;
-                deleteBtn.style.display = 'none';
-            } else {
-                container.innerHTML = `
-                    <div class="header-section">
-                        <h2><i class="fas fa-user"></i> <input type="text" id="editName" value="${customer.name}" required></h2>
-                        <p><span>Contract Date:</span> <input type="date" id="editContractDate" value="${customer.contractDate}" required></p>
-                        <select id="editStatus" required>
-                            <option value="In Progress" ${customer.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                            <option value="In Progress(Funded)" ${customer.status === 'In Progress(Funded)' ? 'selected' : ''}>In Progress (Funded)</option>
-                            <option value="Closed" ${customer.status === 'Closed' ? 'selected' : ''}>Closed</option>
-                            <option value="Cancelled" ${customer.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="section contact-info">
-                        <h3><i class="fas fa-address-book"></i> Contact Information</h3>
-                        <p><i class="fas fa-map-marker-alt"></i> <span>Address:</span> <input type="text" id="editAddress" value="${customer.address}" required></p>
-                        <p><i class="fas fa-phone"></i> <span>Phone Number:</span> <input type="tel" id="editPhone" value="${customer.phone}" required></p>
-                        <p><i class="fas fa-user"></i> <span>Age:</span> <input type="number" id="editAge" value="${customer.age}" min="1" required></p>
-                    </div>
-                    <div class="section">
-                        <h3><i class="fas fa-tools"></i> Project Details</h3>
-                        <p><i class="fas fa-list"></i> <span>Project Type:</span> <select id="editProjectType" multiple required>
-                            <option value="Roofing" ${customer.projectType.includes('Roofing') ? 'selected' : ''}>Roofing</option>
-                            <option value="Solar" ${customer.projectType.includes('Solar') ? 'selected' : ''}>Solar</option>
-                            <option value="Hvac" ${customer.projectType.includes('Hvac') ? 'selected' : ''}>Hvac</option>
-                            <option value="Windows" ${customer.projectType.includes('Windows') ? 'selected' : ''}>Windows</option>
-                            <option value="Tankless Water Heater" ${customer.projectType.includes('Tankless Water Heater') ? 'selected' : ''}>Tankless Water Heater</option>
-                            <option value="Exterior Paint" ${customer.projectType.includes('Exterior Paint') ? 'selected' : ''}>Exterior Paint</option>
-                            <option value="Interior Paint" ${customer.projectType.includes('Interior Paint') ? 'selected' : ''}>Interior Paint</option>
-                            <option value="Flooring" ${customer.projectType.includes('Flooring') ? 'selected' : ''}>Flooring</option>
-                            <option value="Bathroom Remodel" ${customer.projectType.includes('Bathroom Remodel') ? 'selected' : ''}>Bathroom Remodel</option>
-                            <option value="Kitchen Remodel" ${customer.projectType.includes('Kitchen Remodel') ? 'selected' : ''}>Kitchen Remodel</option>
-                            <option value="Landscape" ${customer.projectType.includes('Landscape') ? 'selected' : ''}>Landscape</option>
-                            <option value="Gutters" ${customer.projectType.includes('Gutters') ? 'selected' : ''}>Gutters</option>
-                            <option value="Foundation" ${customer.projectType.includes('Foundation') ? 'selected' : ''}>Foundation</option>
-                            <option value="Insulation" ${customer.projectType.includes('Insulation') ? 'selected' : ''}>Insulation</option>
-                            <option value="Fence" ${customer.projectType.includes('Fence') ? 'selected' : ''}>Fence</option>
-                            <option value="Main Panel Upgrade" ${customer.projectType.includes('Main Panel Upgrade') ? 'selected' : ''}>Main Panel Upgrade</option>
-                            <option value="Rewire" ${customer.projectType.includes('Rewire') ? 'selected' : ''}>Rewire</option>
-                            <option value="Repipe" ${customer.projectType.includes('Repipe') ? 'selected' : ''}>Repipe</option>
-                        </select></p>
-                        <p><i class="fas fa-dollar-sign"></i> <span>Project Price:</span> $<input type="number" id="editProjectPrice" value="${customer.projectPrice}" min="0" step="0.01" required></p>
-                        <p><i class="fas fa-money-bill-wave"></i> <span>Project Expenses:</span> $<input type="number" id="editProjectExpenses" value="${customer.projectExpenses}" min="0" step="0.01" required></p>
-                        <p><i class="fas fa-chart-line"></i> <span>Commission:</span> $<span class="commission-value">${addCommasToNumber(commission)}</span></p>
-                    </div>
-                    <div class="section financial-details">
-                        <h3><i class="fas fa-chart-pie"></i> Financial Details</h3>
-                        <p><i class="fas fa-percent"></i> <span>Lead Cost:</span> <input type="number" id="editLeadCost" value="${customer.leadCost}" min="0" max="100" step="0.1" required>%</p>
-                        <p><i class="fas fa-percent"></i> <span>Dealer Fee:</span> <input type="number" id="editDealerFee" value="${customer.dealerFee}" min="0" max="100" step="0.1" required>%</p>
-                        <p><i class="fas fa-university"></i> <span>Banks:</span> <select id="editBank" multiple required>
-                            <option value="Goodleap" ${Array.isArray(customer.bank) && customer.bank.includes('Goodleap') ? 'selected' : ''}>Goodleap</option>
-                            <option value="Service Finance" ${Array.isArray(customer.bank) && customer.bank.includes('Service Finance') ? 'selected' : ''}>Service Finance</option>
-                            <option value="Aqua" ${Array.isArray(customer.bank) && customer.bank.includes('Aqua') ? 'selected' : ''}>Aqua</option>
-                            <option value="Slice" ${Array.isArray(customer.bank) && customer.bank.includes('Slice') ? 'selected' : ''}>Slice</option>
-                            <option value="Mosaic" ${Array.isArray(customer.bank) && customer.bank.includes('Mosaic') ? 'selected' : ''}>Mosaic</option>
-                        </select></p>
-                        <p><i class="fas fa-file-alt"></i> <span>Terms:</span> <input type="text" id="editTerms" value="${customer.terms}" required></p>
-                        <p><i class="fas fa-check-circle"></i> <span>Max Approved:</span> $<input type="number" id="editMaxApproved" value="${customer.maxApproved}" min="0" step="0.01" required></p>
-                        <p><i class="fas fa-money-check"></i> <span>Money Used:</span> $<input type="number" id="editMoneyUsed" value="${customer.moneyUsed}" min="0" step="0.01" required></p>
-                        <p><i class="fas fa-shield-alt"></i> <span>Payment Method:</span> 
-                            <select id="editPaymentMethod" required>
-                                <option value="Cash" ${customer.paymentMethod === 'Cash' ? 'selected' : ''}>Cash</option>
-                                <option value="Finance" ${customer.paymentMethod === 'Finance' ? 'selected' : ''}>Finance</option>
-                            </select>
-                        </p>
-                    </div>
-                `;
-                deleteBtn.style.display = 'block';
-            }
-        } else {
-            container.innerHTML = '<p>Customer not found.</p>';
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerId = urlParams.get('id');
+    const customer = customers[customerId];
+
+    if (customer) {
+        const commission = calculateCommission(customer);
+        if (!isEditing) {
+            container.innerHTML = `
+                <div class="header-section">
+                    <h2><i class="fas fa-user"></i> ${customer.name}</h2>
+                    <p><span>Contract Date:</span> ${customer.contractDate}</p>
+                    <span class="status ${customer.status.toLowerCase().replace(' ', '-')}">${customer.status}</span>
+                </div>
+                <div class="section contact-info">
+                    <h3><i class="fas fa-address-book"></i> Contact Information</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> <span>Address:</span> ${customer.address}</p>
+                    <p><i class="fas fa-phone"></i> <span>Phone Number:</span> ${customer.phone}</p>
+                    <p><i class="fas fa-user"></i> <span>Age:</span> ${customer.age}</p>
+                </div>
+                <div class="section">
+                    <h3><i class="fas fa-tools"></i> Project Details</h3>
+                    <p><i class="fas fa-list"></i> <span>Project Type:</span> ${Array.isArray(customer.projectType) ? customer.projectType.join(', ') : customer.projectType}</p>
+                    <p><i class="fas fa-dollar-sign"></i> <span>Project Price:</span> $${addCommasToNumber(customer.projectPrice)}</p>
+                    <p><i class="fas fa-money-bill-wave"></i> <span>Project Expenses:</span> $${addCommasToNumber(customer.projectExpenses)}</p>
+                    <p><i class="fas fa-chart-line"></i> <span>Commission:</span> $<span class="commission-value">${addCommasToNumber(commission)}</span></p>
+                </div>
+                <div class="section financial-details">
+                    <h3><i class="fas fa-chart-pie"></i> Financial Details</h3>
+                    <p><i class="fas fa-percent"></i> <span>Lead Cost:</span> ${customer.leadCost}%</p>
+                    <p><i class="fas fa-percent"></i> <span>Dealer Fee:</span> ${customer.dealerFee}%</p>
+                    <p><i class="fas fa-university"></i> <span>Banks:</span> ${Array.isArray(customer.bank) ? customer.bank.join(', ') : customer.bank}</p>
+                    <p><i class="fas fa-file-alt"></i> <span>Terms:</span> ${customer.terms}</p>
+                    <p><i class="fas fa-check-circle"></i> <span>Max Approved:</span> $${addCommasToNumber(customer.maxApproved)}</p>
+                    <p><i class="fas fa-money-check"></i> <span>Money Used:</span> $${addCommasToNumber(customer.moneyUsed)}</p>
+                    <p><i class="fas fa-shield-alt"></i> <span>Payment Method:</span> ${customer.paymentMethod}</p>
+                </div>
+            `;
             deleteBtn.style.display = 'none';
+        } else {
+            container.innerHTML = `
+                <div class="header-section">
+                    <h2><i class="fas fa-user"></i> <input type="text" id="editName" value="${customer.name}" required></h2>
+                    <p><span>Contract Date:</span> <input type="date" id="editContractDate" value="${customer.contractDate}" required></p>
+                    <select id="editStatus" required>
+                        <option value="In Progress" ${customer.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="In Progress(Funded)" ${customer.status === 'In Progress(Funded)' ? 'selected' : ''}>In Progress (Funded)</option>
+                        <option value="Closed" ${customer.status === 'Closed' ? 'selected' : ''}>Closed</option>
+                        <option value="Cancelled" ${customer.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="section contact-info">
+                    <h3><i class="fas fa-address-book"></i> Contact Information</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> <span>Address:</span> <input type="text" id="editAddress" value="${customer.address}" required></p>
+                    <p><i class="fas fa-phone"></i> <span>Phone Number:</span> <input type="tel" id="editPhone" value="${customer.phone}" required></p>
+                    <p><i class="fas fa-user"></i> <span>Age:</span> <input type="number" id="editAge" value="${customer.age}" min="1" required></p>
+                </div>
+                <div class="section">
+                    <h3><i class="fas fa-tools"></i> Project Details</h3>
+                    <p><i class="fas fa-list"></i> <span>Project Type:</span> <select id="editProjectType" multiple required>
+                        <option value="Roofing" ${customer.projectType.includes('Roofing') ? 'selected' : ''}>Roofing</option>
+                        <option value="Solar" ${customer.projectType.includes('Solar') ? 'selected' : ''}>Solar</option>
+                        <option value="Hvac" ${customer.projectType.includes('Hvac') ? 'selected' : ''}>Hvac</option>
+                        <option value="Windows" ${customer.projectType.includes('Windows') ? 'selected' : ''}>Windows</option>
+                        <option value="Tankless Water Heater" ${customer.projectType.includes('Tankless Water Heater') ? 'selected' : ''}>Tankless Water Heater</option>
+                        <option value="Exterior Paint" ${customer.projectType.includes('Exterior Paint') ? 'selected' : ''}>Exterior Paint</option>
+                        <option value="Interior Paint" ${customer.projectType.includes('Interior Paint') ? 'selected' : ''}>Interior Paint</option>
+                        <option value="Flooring" ${customer.projectType.includes('Flooring') ? 'selected' : ''}>Flooring</option>
+                        <option value="Bathroom Remodel" ${customer.projectType.includes('Bathroom Remodel') ? 'selected' : ''}>Bathroom Remodel</option>
+                        <option value="Kitchen Remodel" ${customer.projectType.includes('Kitchen Remodel') ? 'selected' : ''}>Kitchen Remodel</option>
+                        <option value="Landscape" ${customer.projectType.includes('Landscape') ? 'selected' : ''}>Landscape</option>
+                        <option value="Gutters" ${customer.projectType.includes('Gutters') ? 'selected' : ''}>Gutters</option>
+                        <option value="Foundation" ${customer.projectType.includes('Foundation') ? 'selected' : ''}>Foundation</option>
+                        <option value="Insulation" ${customer.projectType.includes('Insulation') ? 'selected' : ''}>Insulation</option>
+                        <option value="Fence" ${customer.projectType.includes('Fence') ? 'selected' : ''}>Fence</option>
+                        <option value="Main Panel Upgrade" ${customer.projectType.includes('Main Panel Upgrade') ? 'selected' : ''}>Main Panel Upgrade</option>
+                        <option value="Rewire" ${customer.projectType.includes('Rewire') ? 'selected' : ''}>Rewire</option>
+                        <option value="Repipe" ${customer.projectType.includes('Repipe') ? 'selected' : ''}>Repipe</option>
+                    </select></p>
+                    <p><i class="fas fa-dollar-sign"></i> <span>Project Price:</span> $<input type="number" id="editProjectPrice" value="${customer.projectPrice}" min="0" step="0.01" required></p>
+                    <p><i class="fas fa-money-bill-wave"></i> <span>Project Expenses:</span> $<input type="number" id="editProjectExpenses" value="${customer.projectExpenses}" min="0" step="0.01" required></p>
+                    <p><i class="fas fa-chart-line"></i> <span>Commission:</span> $<span class="commission-value">${addCommasToNumber(commission)}</span></p>
+                </div>
+                <div class="section financial-details">
+                    <h3><i class="fas fa-chart-pie"></i> Financial Details</h3>
+                    <p><i class="fas fa-percent"></i> <span>Lead Cost:</span> <input type="number" id="editLeadCost" value="${customer.leadCost}" min="0" max="100" step="0.1" required>%</p>
+                    <p><i class="fas fa-percent"></i> <span>Dealer Fee:</span> <input type="number" id="editDealerFee" value="${customer.dealerFee}" min="0" max="100" step="0.1" required>%</p>
+                    <p><i class="fas fa-university"></i> <span>Banks:</span> <select id="editBank" multiple required>
+                        <option value="Goodleap" ${Array.isArray(customer.bank) && customer.bank.includes('Goodleap') ? 'selected' : ''}>Goodleap</option>
+                        <option value="Service Finance" ${Array.isArray(customer.bank) && customer.bank.includes('Service Finance') ? 'selected' : ''}>Service Finance</option>
+                        <option value="Aqua" ${Array.isArray(customer.bank) && customer.bank.includes('Aqua') ? 'selected' : ''}>Aqua</option>
+                        <option value="Slice" ${Array.isArray(customer.bank) && customer.bank.includes('Slice') ? 'selected' : ''}>Slice</option>
+                        <option value="Mosaic" ${Array.isArray(customer.bank) && customer.bank.includes('Mosaic') ? 'selected' : ''}>Mosaic</option>
+                    </select></p>
+                    <p><i class="fas fa-file-alt"></i> <span>Terms:</span> <input type="text" id="editTerms" value="${customer.terms}" required></p>
+                    <p><i class="fas fa-check-circle"></i> <span>Max Approved:</span> $<input type="number" id="editMaxApproved" value="${customer.maxApproved}" min="0" step="0.01" required></p>
+                    <p><i class="fas fa-money-check"></i> <span>Money Used:</span> $<input type="number" id="editMoneyUsed" value="${customer.moneyUsed}" min="0" step="0.01" required></p>
+                    <p><i class="fas fa-shield-alt"></i> <span>Payment Method:</span> 
+                        <select id="editPaymentMethod" required>
+                            <option value="Cash" ${customer.paymentMethod === 'Cash' ? 'selected' : ''}>Cash</option>
+                            <option value="Finance" ${customer.paymentMethod === 'Finance' ? 'selected' : ''}>Finance</option>
+                        </select>
+                    </p>
+                </div>
+            `;
+            deleteBtn.style.display = 'block';
         }
     } else {
-        console.error('Customer details container or delete button not found');
+        container.innerHTML = '<p>Customer not found.</p>';
+        deleteBtn.style.display = 'none';
     }
 }
 
