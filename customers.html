@@ -3,26 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customers - Energy Efficient Sales</title>
+    <title>Customer Details - Energy Efficient Sales</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
+            authDomain: "constructionsalesinterface.firebaseapp.com",
+            projectId: "constructionsalesinterface",
+            storageBucket: "constructionsalesinterface.appspot.com",
+            messagingSenderId: "938357842695",
+            appId: "1:938357842695:web:03ac6e8646528896b78582",
+            measurementId: "G-4D1H3P382N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.firebaseApp = app;
+        window.firestoreDb = db;
+        console.log('Firebase initialized successfully in customer.html');
+    </script>
 </head>
 <body>
-    <div class="customers-container">
+    <div class="customer-details-container">
         <header>
-            <h1>Customers</h1>
+            <h1>Customer Details</h1>
             <nav>
                 <a href="dashboard.html">Dashboard</a>
+                <a href="customers.html">Customers</a>
                 <a href="money-reports.html">Money Reports</a>
                 <a href="#" id="logoutBtn">Log Out</a>
             </nav>
         </header>
-        <button class="btn-primary" id="addCustomerBtn">Add New Customer</button>
-        <div id="customersList" class="customer-cards"></div>
+        <button id="editBtn" class="btn-primary">Edit</button>
+        <button id="deleteBtn" class="btn-danger" style="display: none;">Delete</button>
+        <div id="customerDetails"></div>
     </div>
     <script src="script.js"></script>
 </body>

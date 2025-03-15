@@ -1,38 +1,3 @@
-// המתנה לטעינת Firebase
-function initializeFirebase() {
-    return new Promise((resolve, reject) => {
-        if (typeof firebase === 'undefined') {
-            console.error('Firebase is not loaded yet. Retrying in 100ms...');
-            setTimeout(() => {
-                initializeFirebase().then(resolve).catch(reject);
-            }, 100);
-            return;
-        }
-
-        // הגדרות Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBYFuD-wxJZ6AXQjheCY_224reflu2pS",
-            authDomain: "constructionsalesinterface.firebaseapp.com",
-            projectId: "constructionsalesinterface",
-            storageBucket: "constructionsalesinterface.appspot.com",
-            messagingSenderId: "938357842695",
-            appId: "1:938357842695:web:03ac6e8646528896b78582",
-            measurementId: "G-4D1H3P382N"
-        };
-
-        // איניציאליזציה של Firebase
-        try {
-            firebase.initializeApp(firebaseConfig);
-            console.log('Firebase initialized successfully');
-            const db = firebase.firestore();
-            resolve(db);
-        } catch (error) {
-            console.error('Detailed Firebase initialization error:', error);
-            reject(error);
-        }
-    });
-}
-
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
 if (!currentUser && !window.location.pathname.includes('index.html')) {
@@ -42,13 +7,13 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
 let customers = []; // מערך גלובלי של לקוחות
 let isEditing = false;
 let expenses = []; // מערך זמני לשמירת ההוצאות
-let db; // משתנה גלובלי עבור Firestore
 
 // טעינת לקוחות מ-Firestore וסנכרון עם Local Storage
 async function loadCustomers() {
     try {
+        const db = window.firestoreDb;
         if (!db) {
-            db = await initializeFirebase();
+            throw new Error('Firestore database not initialized');
         }
         console.log('Attempting to load customers from Firestore...');
         const customersRef = db.collection('customers');
@@ -80,8 +45,9 @@ async function loadCustomers() {
 // שמירת לקוחות ב-Local Storage ו-Firestore
 async function saveCustomers(customersToSave) {
     try {
+        const db = window.firestoreDb;
         if (!db) {
-            db = await initializeFirebase();
+            throw new Error('Firestore database not initialized');
         }
         // שמור ב-Local Storage
         localStorage.setItem(`customers_${currentUser}`, JSON.stringify(customersToSave));
