@@ -1,3 +1,24 @@
+// הגדרות Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyBFfuD-wxjz6AXqjeHIsCV_2Z4reflu2ps",
+    authDomain: "constructionsalesinterface.firebaseapp.com",
+    projectId: "constructionsalesinterface",
+    storageBucket: "constructionsalesinterface.firebasestorage.app",
+    messagingSenderId: "938358742695",
+    appId: "1:938358742695:web:03ac6e8646528896b78582",
+    measurementId: "G-4D1H3P382N"
+  };
+  
+// איניציאליזציה של Firebase
+try {
+    firebase.initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+} catch (error) {
+    console.error('Detailed Firebase initialization error:', error);
+    alert('Error initializing Firebase: ' + error.message);
+}
+const db = firebase.firestore();
+
 // בדיקת התחברות בעת טעינת הדפים
 const currentUser = localStorage.getItem('currentUser');
 if (!currentUser && !window.location.pathname.includes('index.html')) {
@@ -7,11 +28,6 @@ if (!currentUser && !window.location.pathname.includes('index.html')) {
 let customers = []; // מערך גלובלי של לקוחות
 let isEditing = false;
 let expenses = []; // מערך זמני לשמירת ההוצאות
-
-// פונקציה ליצירת מזהה ייחודי
-function generateUniqueId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
 
 // טעינת לקוחות מ-Local Storage
 function loadCustomers() {
@@ -23,7 +39,6 @@ function loadCustomers() {
         customers = [];
         console.log(`No customers found in Local Storage for ${currentUser}`);
     }
-    return customers;
 }
 
 // שמירת לקוחות ב-Local Storage
